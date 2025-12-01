@@ -1,0 +1,23 @@
+{
+  "name": "presentation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ADn-001/student_grading_dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ADn-001/student_grading_dashboard/issues"
+  },
+  "homepage": "https://github.com/ADn-001/student_grading_dashboard#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
