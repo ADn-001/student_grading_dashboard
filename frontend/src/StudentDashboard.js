@@ -1,9 +1,11 @@
 // Student dashboard: Top info card, grade table card
 // Fetches courses/users for teacher name/email
 // Hide completed courses
+// Changes: Replaced simple header with Navbar component
 
 import React, { useEffect, useState } from 'react';
 import { fetchCourses, fetchUsers } from './api';
+import Navbar from './Navbar';
 
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState(null);

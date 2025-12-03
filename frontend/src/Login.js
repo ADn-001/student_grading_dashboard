@@ -1,6 +1,7 @@
 // Login component: Simple form to submit email/password
 // Redirects based on role using React Router
 // Updated: Stores logged-in user in localStorage for dashboard access (MVP temp persistence; clears on refresh)
+// Changes: Added app name header, centered form, larger fields/buttons
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -30,12 +31,15 @@ const Login = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <div className="login-container">
+      <h1>Student-Portal</h1>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-      <button type="submit">Login</button>
-    </form>
+      <form onSubmit={handleSubmit}>
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
   );
 };
 

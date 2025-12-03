@@ -3,10 +3,11 @@
 // Course assignments for teacher/student adds/edits, with max limits
 // Syncs User and Course models on save; uses separate states for each add form
 // Clean structure: Handlers reused where possible, good comments for readability
-// Fixed: Moved loadData outside useEffect to make it accessible in handlers (avoids no-undef error)
+// Changes: Replaced simple header with Navbar component
 
 import React, { useEffect, useState } from 'react';
 import { fetchUsers, fetchCourses, createUser, updateUser, deleteUser, updateCourse } from './api';
+import Navbar from './Navbar';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -15,16 +16,19 @@ const AdminDashboard = () => {
   const [searchEmail, setSearchEmail] = useState('');
   const [editingUser, setEditingUser] = useState(null);
   const [selectedCourses, setSelectedCourses] = useState([]); // For edit course selections
+  const [showEditDropdown, setShowEditDropdown] = useState(false); // Toggle for edit dropdown
 
   // Dedicated form states
   const [adminForm, setAdminForm] = useState({ email: '', password: '', fullName: '', role: 'admin' });
   const [teacherForm, setTeacherForm] = useState({ email: '', password: '', fullName: '', role: 'teacher' });
   const [teacherCourses, setTeacherCourses] = useState([]); // Separate for teacher add
+  const [showTeacherDropdown, setShowTeacherDropdown] = useState(false); // Toggle for teacher add dropdown
   const [studentForm, setStudentForm] = useState({
     email: '', password: '', fullName: '', role: 'student',
     major: '', batch: '', currentYear: 1, currentSemester: 'Semester 1'
   });
   const [studentCourses, setStudentCourses] = useState([]); // Separate for student add
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false); // Toggle for student add dropdown
 
   // Define loadData here (simple async function to fetch data; called in useEffect and handlers)
   const loadData = async () => {
@@ -48,15 +52,19 @@ const AdminDashboard = () => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // Course select handler (with max check)
-  const handleCourseChange = (e, role, setSelected) => {
-    const selected = Array.from(e.target.options).filter(opt => opt.selected).map(opt => opt.value);
+  // Course checkbox handler (with max check)
+  const handleCourseCheckbox = (courseName, role, selected, setSelected) => {
     const max = role === 'teacher' ? 3 : 5;
-    if (selected.length > max) {
+    let newSelected = [...selected];
+    if (newSelected.includes(courseName)) {
+      newSelected = newSelected.filter(c => c !== courseName);
+    } else if (newSelected.length < max) {
+      newSelected.push(courseName);
+    } else {
       alert(`Max ${max} courses allowed for ${role}s.`);
       return;
     }
-    setSelected(selected);
+    setSelected(newSelected);
   };
 
   // Generic add handler (role-specific)
@@ -67,10 +75,10 @@ const AdminDashboard = () => {
       if (role === 'student') updatedData.currentCourses = selectedCourses.map(name => ({ courseName: name, grade: null }));
       const savedUser = await createUser(updatedData);
       await syncCourses(savedUser); // Sync with courses
-      // Reset forms
+      // Reset forms and toggles
       if (role === 'admin') setAdminForm({ email: '', password: '', fullName: '', role: 'admin' });
-      if (role === 'teacher') { setTeacherForm({ email: '', password: '', fullName: '', role: 'teacher' }); setTeacherCourses([]); }
-      if (role === 'student') { setStudentForm({ email: '', password: '', fullName: '', role: 'student', major: '', batch: '', currentYear: 1, currentSemester: 'Semester 1' }); setStudentCourses([]); }
+      if (role === 'teacher') { setTeacherForm({ email: '', password: '', fullName: '', role: 'teacher' }); setTeacherCourses([]); setShowTeacherDropdown(false); }
+      if (role === 'student') { setStudentForm({ email: '', password: '', fullName: '', role: 'student', major: '', batch: '', currentYear: 1, currentSemester: 'Semester 1' }); setStudentCourses([]); setShowStudentDropdown(false); }
       await loadData(); // Refetch
     } catch (err) {
       console.error('Add error:', err);
@@ -99,6 +107,7 @@ const AdminDashboard = () => {
       // Pre-populate courses for edit
       if (user.role === 'teacher') setSelectedCourses(user.coursesTaught || []);
       if (user.role === 'student') setSelectedCourses(user.currentCourses ? user.currentCourses.map(c => c.courseName) : []);
+      setShowEditDropdown(false);
     } else {
       setError('User not found');
     }
@@ -116,6 +125,7 @@ const AdminDashboard = () => {
       setEditingUser(null);
       setSelectedCourses([]);
       setSearchEmail('');
+      setShowEditDropdown(false);
       await loadData();
     } catch (err) {
       console.error('Edit error:', err);
@@ -208,9 +218,21 @@ const AdminDashboard = () => {
         <input name="fullName" value={teacherForm.fullName} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Full Name" required />
         <input name="email" value={teacherForm.email} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Email" required />
         <input name="password" type="password" value={teacherForm.password} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Password" required />
-        <select multiple value={teacherCourses} onChange={(e) => handleCourseChange(e, 'teacher', setTeacherCourses)} size={5}>
-          {courses.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-        </select>
+        <button type="button" onClick={() => setShowTeacherDropdown(!showTeacherDropdown)}>Assign Courses</button>
+        {showTeacherDropdown && (
+          <div className="dropdown">
+            {courses.map(c => (
+              <label key={c._id}>
+                <input
+                  type="checkbox"
+                  checked={teacherCourses.includes(c.name)}
+                  onChange={() => handleCourseCheckbox(c.name, 'teacher', teacherCourses, setTeacherCourses)}
+                />
+                {c.name}
+              </label>
+            ))}
+          </div>
+        )}
         <button type="submit">Add Teacher</button>
       </form>
 
@@ -224,9 +246,21 @@ const AdminDashboard = () => {
         <input name="batch" value={studentForm.batch} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Batch (e.g., 2025)" required />
         <input name="currentYear" type="number" value={studentForm.currentYear} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Year" required />
         <input name="currentSemester" value={studentForm.currentSemester} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Semester" required />
-        <select multiple value={studentCourses} onChange={(e) => handleCourseChange(e, 'student', setStudentCourses)} size={5}>
-          {courses.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-        </select>
+        <button type="button" onClick={() => setShowStudentDropdown(!showStudentDropdown)}>Assign Courses</button>
+        {showStudentDropdown && (
+          <div className="dropdown">
+            {courses.map(c => (
+              <label key={c._id}>
+                <input
+                  type="checkbox"
+                  checked={studentCourses.includes(c.name)}
+                  onChange={() => handleCourseCheckbox(c.name, 'student', studentCourses, setStudentCourses)}
+                />
+                {c.name}
+              </label>
+            ))}
+          </div>
+        )}
         <button type="submit">Add Student</button>
       </form>
 
@@ -248,9 +282,23 @@ const AdminDashboard = () => {
             </>
           )}
           {(editingUser.role === 'teacher' || editingUser.role === 'student') && (
-            <select multiple value={selectedCourses} onChange={(e) => handleCourseChange(e, editingUser.role, setSelectedCourses)} size={5}>
-              {courses.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-            </select>
+            <>
+              <button type="button" onClick={() => setShowEditDropdown(!showEditDropdown)}>Assign Courses</button>
+              {showEditDropdown && (
+                <div className="dropdown">
+                  {courses.map(c => (
+                    <label key={c._id}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCourses.includes(c.name)}
+                        onChange={() => handleCourseCheckbox(c.name, editingUser.role, selectedCourses, setSelectedCourses)}
+                      />
+                      {c.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </>
           )}
           <button type="submit">Save Edit</button>
           <button type="button" onClick={() => setEditingUser(null)}>Cancel</button>

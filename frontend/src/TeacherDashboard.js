@@ -1,9 +1,11 @@
 // Teacher dashboard: Horizontal course cards, clickable to show student table
 // Table: email, name, current grade, new grade input
 // Master Update button batches all changes
+// Changes: Replaced simple header with Navbar component
 
 import React, { useEffect, useState } from 'react';
 import { fetchCourses, fetchUsers, updateUser } from './api';
+import Navbar from './Navbar';
 
 const TeacherDashboard = () => {
   const [teacherData, setTeacherData] = useState(null);
