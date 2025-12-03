@@ -1,42 +1,60 @@
-// Student dashboard: View grades, history, major, etc.
-// Updated: Retrieves logged-in user from localStorage instead of fetching all users and picking first
-// Displays directly from user.currentCourses (personalized)
+// Student dashboard: Top info card, grade table card
+// Fetches courses/users for teacher name/email
+// Hide completed courses
 
 import React, { useEffect, useState } from 'react';
+import { fetchCourses, fetchUsers } from './api';
 
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [teachers, setTeachers] = useState([]);  // For name lookup
 
   useEffect(() => {
-    // Retrieve logged-in user from localStorage
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-      setStudentData(JSON.parse(storedUser));
-    } else {
-      console.error('No logged-in user found');
-    }
+    const storedUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+    setStudentData(storedUser);
+
+    const loadData = async () => {
+      setCourses(await fetchCourses());
+      const allUsers = await fetchUsers();
+      setTeachers(allUsers.filter(u => u.role === 'teacher'));
+    };
+    loadData();
   }, []);
 
-  if (!studentData) return <p>Loading or no user data...</p>;
+  if (!studentData) return <p>Loading...</p>;
 
   return (
     <div>
-      <h1>Student Dashboard</h1>
-      <p>Major: {studentData.major || 'N/A'}</p>
-      <p>Batch: {studentData.batch || 'N/A'}</p>
-      <p>Current Year/Semester: {studentData.currentYear} - {studentData.currentSemester}</p>
-      <h2>Current Courses</h2>
-      <ul>
-        {studentData.currentCourses?.map((course, idx) => (
-          <li key={idx}>{course.courseName}: {course.grade || 'Pending'}</li>
-        )) || <li>No courses assigned</li>}
-      </ul>
-      <h2>Completed Courses</h2>
-      <ul>
-        {studentData.completedCourses?.map((course, idx) => (
-          <li key={idx}>{course.courseName} ({course.year} {course.semester}): {course.finalGrade} - {course.passed ? 'Passed' : 'Failed'}</li>
-        )) || <li>No completed courses</li>}
-      </ul>
+      <div className="card">
+        <h2>{studentData.fullName}</h2>
+        <p>Major: {studentData.major}</p>
+        <p>Batch: {studentData.batch}</p>
+        <p>Current Year/Semester: {studentData.currentYear} - {studentData.currentSemester}</p>
+      </div>
+      <div className="card">
+        <h2>Grades</h2>
+        <table>
+          <thead>
+            <tr><th>Course</th><th>Teacher</th><th>Teacher Email</th><th>Grade</th></tr>
+          </thead>
+          <tbody>
+            {studentData.currentCourses?.map((c, idx) => {
+              const course = courses.find(course => course.name === c.courseName);
+              const teacherEmail = course?.teacher || 'N/A';
+              const teacher = teachers.find(t => t.email === teacherEmail);
+              return (
+                <tr key={idx}>
+                  <td>{c.courseName}</td>
+                  <td>{teacher?.fullName || 'N/A'}</td>
+                  <td>{teacherEmail}</td>
+                  <td>{c.grade || 'Pending'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

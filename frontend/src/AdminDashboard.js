@@ -1,227 +1,261 @@
-// Admin dashboard: Basic CRUD for users, courses, etc.
-// Uses forms for add/edit/delete
-// Updated: Added course assignment for teachers (max 3) and students (max 5)
-// Conditionally shows multi-select dropdown based on role; syncs User and Course models on save
-// Refetches data after mutations for UI sync; enforces max selections with checks
+// Admin dashboard: 3 separate tables for user types, dedicated add forms per role, search-based edit form
+// Updated for UI enhancements: Tables for admins/teachers/students, role-specific add forms (student includes major/batch/year/sem)
+// Course assignments for teacher/student adds/edits, with max limits
+// Syncs User and Course models on save; uses separate states for each add form
+// Clean structure: Handlers reused where possible, good comments for readability
+// Fixed: Moved loadData outside useEffect to make it accessible in handlers (avoids no-undef error)
 
 import React, { useEffect, useState } from 'react';
 import { fetchUsers, fetchCourses, createUser, updateUser, deleteUser, updateCourse } from './api';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
-  const [courses, setCourses] = useState([]); // All courses for dropdown
-  const [error, setError] = useState(''); // For UI error feedback
-  const [editingUser, setEditingUser] = useState(null); // Track user being edited (null for add mode)
-  const [formData, setFormData] = useState({ // Form state for add/edit
-    email: '',
-    password: '',
-    fullName: '',
-    role: 'student' // Default role
+  const [courses, setCourses] = useState([]);
+  const [error, setError] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [editingUser, setEditingUser] = useState(null);
+  const [selectedCourses, setSelectedCourses] = useState([]); // For edit course selections
+
+  // Dedicated form states
+  const [adminForm, setAdminForm] = useState({ email: '', password: '', fullName: '', role: 'admin' });
+  const [teacherForm, setTeacherForm] = useState({ email: '', password: '', fullName: '', role: 'teacher' });
+  const [teacherCourses, setTeacherCourses] = useState([]); // Separate for teacher add
+  const [studentForm, setStudentForm] = useState({
+    email: '', password: '', fullName: '', role: 'student',
+    major: '', batch: '', currentYear: 1, currentSemester: 'Semester 1'
   });
-  const [selectedCourses, setSelectedCourses] = useState([]); // Selected course names for assignment
+  const [studentCourses, setStudentCourses] = useState([]); // Separate for student add
 
-  // Load data on mount
-  useEffect(() => {
-    loadData();
-  }, []);
-
+  // Define loadData here (simple async function to fetch data; called in useEffect and handlers)
   const loadData = async () => {
     try {
       setUsers(await fetchUsers());
       setCourses(await fetchCourses());
-      setError(''); // Clear errors
+      setError('');
     } catch (err) {
       console.error('Load data error:', err);
       setError('Failed to load data.');
     }
   };
 
-  // Handle form input changes (text fields)
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Load data on mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Generic input change handler (for any form)
+  const handleInputChange = (e, setForm) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // Handle role change: Reset selected courses if role changes
-  const handleRoleChange = (e) => {
-    handleInputChange(e);
-    setSelectedCourses([]); // Reset selections on role change
-  };
-
-  // Handle course multi-select changes
-  const handleCourseChange = (e) => {
-    const options = Array.from(e.target.options);
-    const selected = options.filter(opt => opt.selected).map(opt => opt.value);
-    const max = formData.role === 'teacher' ? 3 : 5;
+  // Course select handler (with max check)
+  const handleCourseChange = (e, role, setSelected) => {
+    const selected = Array.from(e.target.options).filter(opt => opt.selected).map(opt => opt.value);
+    const max = role === 'teacher' ? 3 : 5;
     if (selected.length > max) {
-      alert(`Max ${max} courses allowed for ${formData.role}s.`);
-      return; // Prevent exceeding max
+      alert(`Max ${max} courses allowed for ${role}s.`);
+      return;
     }
-    setSelectedCourses(selected);
+    setSelected(selected);
   };
 
-  // Handle add or edit submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Generic add handler (role-specific)
+  const handleAdd = async (formData, selectedCourses = [], role) => {
     try {
-      let updatedUserData = { ...formData };
-
-      // Role-specific course assignments
-      if (formData.role === 'teacher') {
-        updatedUserData.coursesTaught = selectedCourses;
-      } else if (formData.role === 'student') {
-        updatedUserData.currentCourses = selectedCourses.map(name => ({ courseName: name, grade: null })); // New assignments with null grade
-      }
-
-      let savedUser;
-      if (editingUser) {
-        // Edit mode: PUT update user
-        savedUser = await updateUser(editingUser._id, updatedUserData);
-      } else {
-        // Add mode: POST create user
-        savedUser = await createUser(updatedUserData);
-      }
-
-      // Sync related courses
-      await syncCourses(savedUser);
-
-      resetForm(); // Clear form
-      await loadData(); // Refetch to update list
+      let updatedData = { ...formData };
+      if (role === 'teacher') updatedData.coursesTaught = selectedCourses;
+      if (role === 'student') updatedData.currentCourses = selectedCourses.map(name => ({ courseName: name, grade: null }));
+      const savedUser = await createUser(updatedData);
+      await syncCourses(savedUser); // Sync with courses
+      // Reset forms
+      if (role === 'admin') setAdminForm({ email: '', password: '', fullName: '', role: 'admin' });
+      if (role === 'teacher') { setTeacherForm({ email: '', password: '', fullName: '', role: 'teacher' }); setTeacherCourses([]); }
+      if (role === 'student') { setStudentForm({ email: '', password: '', fullName: '', role: 'student', major: '', batch: '', currentYear: 1, currentSemester: 'Semester 1' }); setStudentCourses([]); }
+      await loadData(); // Refetch
     } catch (err) {
-      console.error('Submit error:', err);
-      setError('Failed to save user.');
-    }
-  };
-
-  // Sync User assignments with Course models (e.g., update teacher or enrolledStudents)
-  const syncCourses = async (user) => {
-    if (user.role === 'teacher') {
-      // Update each selected course's teacher field
-      await Promise.all(user.coursesTaught.map(async (courseName) => {
-        const course = courses.find(c => c.name === courseName);
-        if (course) {
-          await updateCourse(course._id, { teacher: user.fullName });
-        }
-      }));
-    } else if (user.role === 'student') {
-      // Update each selected course's enrolledStudents
-      await Promise.all(user.currentCourses.map(async ({ courseName }) => {
-        const course = courses.find(c => c.name === courseName);
-        if (course && !course.enrolledStudents.includes(user.email)) {
-          await updateCourse(course._id, {
-            enrolledStudents: [...course.enrolledStudents, user.email]
-          });
-        }
-      }));
+      console.error('Add error:', err);
+      setError('Failed to add user.');
     }
   };
 
   // Handle delete
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    if (window.confirm('Delete user?')) {
       try {
         await deleteUser(id);
-        await loadData(); // Refetch to update list
+        await loadData();
       } catch (err) {
         console.error('Delete error:', err);
-        setError('Failed to delete user.');
+        setError('Failed to delete.');
       }
     }
   };
 
-  // Start editing a user (populate form and selections)
-  const startEdit = (user) => {
-    setFormData({
-      email: user.email,
-      password: user.password, // Note: Plain text for MVP - insecure!
-      fullName: user.fullName,
-      role: user.role
-    });
-    // Pre-populate selected courses based on role
-    if (user.role === 'teacher') {
-      setSelectedCourses(user.coursesTaught || []);
-    } else if (user.role === 'student') {
-      setSelectedCourses(user.currentCourses ? user.currentCourses.map(c => c.courseName) : []);
+  // Search for edit
+  const handleSearch = async () => {
+    const user = users.find(u => u.email === searchEmail);
+    if (user) {
+      setEditingUser(user);
+      // Pre-populate courses for edit
+      if (user.role === 'teacher') setSelectedCourses(user.coursesTaught || []);
+      if (user.role === 'student') setSelectedCourses(user.currentCourses ? user.currentCourses.map(c => c.courseName) : []);
     } else {
-      setSelectedCourses([]);
+      setError('User not found');
     }
-    setEditingUser(user);
   };
 
-  // Reset form for add mode
-  const resetForm = () => {
-    setFormData({ email: '', password: '', fullName: '', role: 'student' });
-    setSelectedCourses([]);
-    setEditingUser(null);
+  // Handle edit submit
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let updatedData = { ...editingUser };
+      if (editingUser.role === 'teacher') updatedData.coursesTaught = selectedCourses;
+      if (editingUser.role === 'student') updatedData.currentCourses = selectedCourses.map(name => ({ courseName: name, grade: null })); // Reset grades for simplicity
+      const savedUser = await updateUser(editingUser._id, updatedData);
+      await syncCourses(savedUser);
+      setEditingUser(null);
+      setSelectedCourses([]);
+      setSearchEmail('');
+      await loadData();
+    } catch (err) {
+      console.error('Edit error:', err);
+      setError('Failed to edit user.');
+    }
   };
+
+  // Sync assignments with Course models (shared function)
+  const syncCourses = async (user) => {
+    if (user.role === 'teacher') {
+      await Promise.all(user.coursesTaught.map(async (name) => {
+        const course = courses.find(c => c.name === name);
+        if (course) await updateCourse(course._id, { teacher: user.email }); // Use email as per seed update
+      }));
+    } else if (user.role === 'student') {
+      await Promise.all(user.currentCourses.map(async ({ courseName }) => {
+        const course = courses.find(c => c.name === courseName);
+        if (course && !course.enrolledStudents.includes(user.email)) {
+          await updateCourse(course._id, { enrolledStudents: [...course.enrolledStudents, user.email] });
+        }
+      }));
+    }
+  };
+
+  // Filter users by role for tables
+  const admins = users.filter(u => u.role === 'admin');
+  const teachers = users.filter(u => u.role === 'teacher');
+  const students = users.filter(u => u.role === 'student');
 
   return (
     <div>
       <h1>Admin Dashboard</h1>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      
-      <h2>Manage Users</h2>
-      <ul>
-        {users.map((user) => (
-          <li key={user._id}>
-            {user.fullName} ({user.role}) - {user.email}
-            <button onClick={() => startEdit(user)}>Edit</button>
-            <button onClick={() => handleDelete(user._id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-      
-      {/* Form for add/edit */}
-      <h3>{editingUser ? 'Edit User' : 'Add User'}</h3>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          placeholder="Email"
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleInputChange}
-          placeholder="Password"
-          required
-        />
-        <input
-          type="text"
-          name="fullName"
-          value={formData.fullName}
-          onChange={handleInputChange}
-          placeholder="Full Name"
-          required
-        />
-        <select name="role" value={formData.role} onChange={handleRoleChange}>
-          <option value="student">Student</option>
-          <option value="teacher">Teacher</option>
-          <option value="admin">Admin</option>
-        </select>
 
-        {/* Conditional course multi-select for teacher/student */}
-        {(formData.role === 'teacher' || formData.role === 'student') && (
-          <div>
-            <label>Select Courses (hold Ctrl/Cmd for multi-select, max {formData.role === 'teacher' ? 3 : 5}):</label>
-            <select multiple value={selectedCourses} onChange={handleCourseChange} size={5}>
-              {courses.map((course) => (
-                <option key={course._id} value={course.name}>
-                  {course.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+      {/* Admins Table */}
+      <h2>Admins</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Actions</th></tr></thead>
+        <tbody>
+          {admins.map(u => (
+            <tr key={u._id}>
+              <td>{u.fullName}</td><td>{u.email}</td>
+              <td><button onClick={() => handleDelete(u._id)}>Delete</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-        <button type="submit">Save</button>
-        {editingUser && <button type="button" onClick={resetForm}>Cancel Edit</button>}
+      {/* Teachers Table */}
+      <h2>Teachers</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Courses</th><th>Actions</th></tr></thead>
+        <tbody>
+          {teachers.map(u => (
+            <tr key={u._id}>
+              <td>{u.fullName}</td><td>{u.email}</td><td>{u.coursesTaught?.join(', ') || 'None'}</td>
+              <td><button onClick={() => handleDelete(u._id)}>Delete</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Students Table */}
+      <h2>Students</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Major</th><th>Batch</th><th>Courses</th><th>Actions</th></tr></thead>
+        <tbody>
+          {students.map(u => (
+            <tr key={u._id}>
+              <td>{u.fullName}</td><td>{u.email}</td><td>{u.major}</td><td>{u.batch}</td>
+              <td>{u.currentCourses?.map(c => c.courseName).join(', ') || 'None'}</td>
+              <td><button onClick={() => handleDelete(u._id)}>Delete</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Add Admin Form */}
+      <h2>Add Admin</h2>
+      <form onSubmit={(e) => { e.preventDefault(); handleAdd(adminForm, [], 'admin'); }}>
+        <input name="fullName" value={adminForm.fullName} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Full Name" required />
+        <input name="email" value={adminForm.email} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Email" required />
+        <input name="password" type="password" value={adminForm.password} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Password" required />
+        <button type="submit">Add Admin</button>
       </form>
-      
-      {/* TODO: Similar sections for courses, majors, batches */}
+
+      {/* Add Teacher Form */}
+      <h2>Add Teacher</h2>
+      <form onSubmit={(e) => { e.preventDefault(); handleAdd(teacherForm, teacherCourses, 'teacher'); }}>
+        <input name="fullName" value={teacherForm.fullName} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Full Name" required />
+        <input name="email" value={teacherForm.email} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Email" required />
+        <input name="password" type="password" value={teacherForm.password} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Password" required />
+        <select multiple value={teacherCourses} onChange={(e) => handleCourseChange(e, 'teacher', setTeacherCourses)} size={5}>
+          {courses.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+        </select>
+        <button type="submit">Add Teacher</button>
+      </form>
+
+      {/* Add Student Form */}
+      <h2>Add Student</h2>
+      <form onSubmit={(e) => { e.preventDefault(); handleAdd(studentForm, studentCourses, 'student'); }}>
+        <input name="fullName" value={studentForm.fullName} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Full Name" required />
+        <input name="email" value={studentForm.email} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Email" required />
+        <input name="password" type="password" value={studentForm.password} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Password" required />
+        <input name="major" value={studentForm.major} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Major" required />
+        <input name="batch" value={studentForm.batch} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Batch (e.g., 2025)" required />
+        <input name="currentYear" type="number" value={studentForm.currentYear} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Year" required />
+        <input name="currentSemester" value={studentForm.currentSemester} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Semester" required />
+        <select multiple value={studentCourses} onChange={(e) => handleCourseChange(e, 'student', setStudentCourses)} size={5}>
+          {courses.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+        </select>
+        <button type="submit">Add Student</button>
+      </form>
+
+      {/* Edit User Form */}
+      <h2>Edit User (Search by Email)</h2>
+      <input value={searchEmail} onChange={(e) => setSearchEmail(e.target.value)} placeholder="Email" />
+      <button onClick={handleSearch}>Search</button>
+      {editingUser && (
+        <form onSubmit={handleEditSubmit}>
+          <input name="fullName" value={editingUser.fullName} onChange={(e) => setEditingUser(prev => ({ ...prev, fullName: e.target.value }))} placeholder="Full Name" required />
+          <input name="email" value={editingUser.email} onChange={(e) => setEditingUser(prev => ({ ...prev, email: e.target.value }))} placeholder="Email" required />
+          <input name="password" type="password" value={editingUser.password} onChange={(e) => setEditingUser(prev => ({ ...prev, password: e.target.value }))} placeholder="Password" required />
+          {editingUser.role === 'student' && (
+            <>
+              <input name="major" value={editingUser.major || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, major: e.target.value }))} placeholder="Major" />
+              <input name="batch" value={editingUser.batch || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, batch: e.target.value }))} placeholder="Batch" />
+              <input name="currentYear" type="number" value={editingUser.currentYear || 1} onChange={(e) => setEditingUser(prev => ({ ...prev, currentYear: parseInt(e.target.value) }))} placeholder="Current Year" />
+              <input name="currentSemester" value={editingUser.currentSemester || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, currentSemester: e.target.value }))} placeholder="Current Semester" />
+            </>
+          )}
+          {(editingUser.role === 'teacher' || editingUser.role === 'student') && (
+            <select multiple value={selectedCourses} onChange={(e) => handleCourseChange(e, editingUser.role, setSelectedCourses)} size={5}>
+              {courses.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+            </select>
+          )}
+          <button type="submit">Save Edit</button>
+          <button type="button" onClick={() => setEditingUser(null)}>Cancel</button>
+        </form>
+      )}
     </div>
   );
 };
