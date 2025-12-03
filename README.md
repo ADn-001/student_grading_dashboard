@@ -2,9 +2,10 @@
 
 A simple, clean, and role-based **Student Grading Dashboard** built with the MERN stack.  
 This MVP allows Admins, Teachers, and Students to log in and perform their respective tasks with a modern dark-themed UI.
-Admins can add, edit and delete users. assign courses to teachers and students, add major, graduation, semester info to students. Add other admins.
-Teachers can create or delete assignments, update student grades.
-Students can look at their grades and assignments.
+
+##Admins can add, edit and delete users. assign courses to teachers and students, add major, graduation, semester info to students. Add other admins.
+##Teachers can create or delete assignments, update student grades.
+##Students can look at their grades and assignments.
 **Project made by:** Adnan Mohammed Shelim
 
 ---
