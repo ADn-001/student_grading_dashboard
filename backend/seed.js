@@ -11,6 +11,7 @@ const User = require('./models/User');
 const Course = require('./models/Course');
 const Major = require('./models/Major');
 const Batch = require('./models/Batch');
+const Assignment = require('./models/Assignment');
 
 // Hardcoded DB connection (as per MVP - use .env in production)
 const DB_URI = 'mongodb://localhost:27017/mvp_db';
@@ -50,7 +51,8 @@ async function seedDB() {
       User.deleteMany({}),
       Course.deleteMany({}),
       Major.deleteMany({}),
-      Batch.deleteMany({})
+      Batch.deleteMany({}),
+      Assignment.deleteMany({})
     ]);
     console.log('Dropped existing collections');
 

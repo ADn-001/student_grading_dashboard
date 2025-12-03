@@ -1,14 +1,13 @@
-// Main App component: Sets up routing for login and dashboards
-// Updated: Added /account route, /home alias for dashboard; conditional Navbar (not on login)
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './Login';
 import AdminDashboard from './AdminDashboard';
 import TeacherDashboard from './TeacherDashboard';
 import StudentDashboard from './StudentDashboard';
-import Account from './Account';  // New
-import Navbar from './Navbar';  // New
+import TeacherAssignments from './TeacherAssignments';
+import StudentAssignments from './StudentAssignments';
+import Account from './Account';
+import Navbar from './Navbar'; 
 
 const ProtectedRoute = ({ children }) => {
   const user = localStorage.getItem('loggedInUser');
@@ -29,6 +28,8 @@ const App = () => (
       <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
       <Route path="/teacher/dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
       <Route path="/student/dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
+      <Route path="/teacher/assignments" element={<TeacherAssignments />} />
+      <Route path="/student/assignments" element={<StudentAssignments />} />
       <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
     </Routes>
   </Router>

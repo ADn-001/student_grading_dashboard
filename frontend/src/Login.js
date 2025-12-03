@@ -32,7 +32,7 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <h1>Student-Portal</h1>
+      <h1>Uni-Portal</h1>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
