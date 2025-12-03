@@ -1,45 +1,95 @@
 // Teacher dashboard: View courses, students, update grades
-// Simple form for updates
+// Updated: Retrieves logged-in user from localStorage; filters courses by user.coursesTaught
+// Fetches courses but only shows teacher's assigned ones; includes enrolled students per course
 
 import React, { useEffect, useState } from 'react';
-import { fetchCourses, updateUser } from './api';
+import { fetchCourses, updateUser, fetchUsers } from './api';
 
 const TeacherDashboard = () => {
-  const [courses, setCourses] = useState([]);
+  const [teacherData, setTeacherData] = useState(null);
+  const [courses, setCourses] = useState([]); // All courses (filtered later)
+  const [gradeUpdates, setGradeUpdates] = useState({}); // Temp state for new grades per student/course
 
   useEffect(() => {
+    // Retrieve logged-in user from localStorage
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
+      setTeacherData(JSON.parse(storedUser));
+    } else {
+      console.error('No logged-in user found');
+    }
+
+    // Fetch all courses (needed for enrolled students)
     const loadCourses = async () => {
-      const data = await fetchCourses();
-      setCourses(data);
+      try {
+        setCourses(await fetchCourses());
+      } catch (err) {
+        console.error('Fetch courses error:', err);
+      }
     };
     loadCourses();
   }, []);
 
-  const handleUpdateGrade = async (studentId, courseName, newGrade) => {
-    // Simplistic: Update student's currentCourses (in real app, more robust)
-    // Assume we fetch/update user directly
-    await updateUser(studentId, { /* patch logic for grade */ });
-    console.log(`Updated grade for ${courseName} to ${newGrade}`);
+  if (!teacherData) return <p>Loading or no user data...</p>;
+
+  // Filter courses to those taught by this teacher
+  const taughtCourses = courses.filter(course => teacherData.coursesTaught?.includes(course.name));
+
+  // Handle grade input change (store temp per student/course)
+  const handleGradeChange = (courseName, studentEmail, newGrade) => {
+    setGradeUpdates(prev => ({
+      ...prev,
+      [`${courseName}-${studentEmail}`]: newGrade
+    }));
+  };
+
+  // Update student's grade in their currentCourses
+  const handleUpdateGrade = async (courseName, studentEmail, newGrade) => {
+    try {
+      // Fetch the student to update (need their ID; simplistic: fetch all users for MVP)
+      const users = await fetchUsers(); // Assume fetchUsers imported if needed
+      const student = users.find(u => u.email === studentEmail && u.role === 'student');
+      if (!student) throw new Error('Student not found');
+
+      // Update student's currentCourses array
+      const updatedCourses = student.currentCourses.map(c =>
+        c.courseName === courseName ? { ...c, grade: newGrade } : c
+      );
+      await updateUser(student._id, { currentCourses: updatedCourses });
+
+      // Clear temp state
+      setGradeUpdates(prev => ({ ...prev, [`${courseName}-${studentEmail}`]: undefined }));
+      console.log(`Updated grade for ${studentEmail} in ${courseName} to ${newGrade}`);
+    } catch (err) {
+      console.error('Update grade error:', err);
+    }
   };
 
   return (
     <div>
       <h1>Teacher Dashboard</h1>
-      {courses.map((course) => (
+      {taughtCourses.map((course) => (
         <div key={course._id}>
           <h2>{course.name}</h2>
           <ul>
-            {course.enrolledStudents.map((student, idx) => (
+            {course.enrolledStudents.map((studentEmail, idx) => (
               <li key={idx}>
-                {student}
-                {/* Simple form/button for grade update */}
-                <input type="text" placeholder="New Grade" onChange={(e) => {/* store temp */}} />
-                <button onClick={() => handleUpdateGrade(/* params */)}>Update</button>
+                {studentEmail}
+                <input
+                  type="text"
+                  placeholder="New Grade"
+                  value={gradeUpdates[`${course.name}-${studentEmail}`] || ''}
+                  onChange={(e) => handleGradeChange(course.name, studentEmail, e.target.value)}
+                />
+                <button onClick={() => handleUpdateGrade(course.name, studentEmail, gradeUpdates[`${course.name}-${studentEmail}`])}>
+                  Update
+                </button>
               </li>
             ))}
           </ul>
         </div>
       ))}
+      {taughtCourses.length === 0 && <p>No courses assigned</p>}
     </div>
   );
 };
