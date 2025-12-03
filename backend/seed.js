@@ -103,9 +103,9 @@ async function seedDB() {
       teachers.push(teacher);
 
       // Assign teacher to their courses (update Course docs)
-      await Promise.all(taughtCourses.map(async courseName => {
-        await Course.findOneAndUpdate({ name: courseName }, { teacher: teacher.fullName });
-      }));
+        await Promise.all(taughtCourses.map(async courseName => {
+        await Course.findOneAndUpdate({ name: courseName }, { teacher: teacher.email });  // Change to email
+        }));
     }
     console.log('Seeded 5 teachers and assigned courses');
 
