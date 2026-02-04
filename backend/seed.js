@@ -28,8 +28,8 @@ const DEFAULT_PASSWORD = 'password123'; // Plain text for MVP demo only
 const STUDENT_YEAR = 1;
 const STUDENT_SEMESTER = 'Semester 1';
 const BATCH_YEAR = 2029; // Graduation year (assuming 4-year program starting 2025)
-const POSSIBLE_GRADES = ['A', 'B', 'C', 'D', 'F', null]; // Possible grades for seeding (including null for pending)
-
+// const POSSIBLE_GRADES = ['A', 'B', 'C', 'D', 'F', null]; // Possible grades for seeding (including null for pending)
+const POSSIBLE_GRADES = [null]; // We'll generate numbers dynamically
 // Helper to generate random subset of array
 const getRandomSubset = (arr, min = 2, max = 5) => {
   const shuffled = arr.sort(() => 0.5 - Math.random());
@@ -37,8 +37,14 @@ const getRandomSubset = (arr, min = 2, max = 5) => {
 };
 
 // Helper to get a random grade
-const getRandomGrade = () => faker.helpers.arrayElement(POSSIBLE_GRADES);
+// const getRandomGrade = () => faker.helpers.arrayElement(POSSIBLE_GRADES);
 
+
+// Helper to get a random numeric grade (50-100) or null ~30% chance
+const getRandomGrade = () => {
+  if (Math.random() < 0.3) return null; // ~30% ungraded
+  return faker.number.int({ min: 50, max: 100 });
+};
 // Main seeding function
 async function seedDB() {
   try {
@@ -117,9 +123,9 @@ async function seedDB() {
       for (let i = 0; i < studentsPerMajor; i++) {
         const batch = batchDocs.find(b => b.major === major).graduationYear.toString();
         const currentCourses = getRandomSubset(courseNames, 3, 5).map(name => ({
-          courseName: name,
-          grade: getRandomGrade() // Seed random grade (A-F or null)
-        })); // 3-5 random courses, with seeded grades
+            courseName: name,
+            grade: getRandomGrade()   // Now numeric or null
+          }));// 3-5 random courses, with seeded grades
         const student = new User({
           email: faker.internet.email(),
           password: DEFAULT_PASSWORD,

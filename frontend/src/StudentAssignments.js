@@ -1,39 +1,100 @@
-// frontend/src/StudentAssignments.jsx
 // Student assignments page: View assignments for enrolled courses as cards (read-only)
+// Updated: Display teacher file download links
+// New: Allow file uploads for submissions; display own submitted files as download links
+// Fix: Use BACKEND_URL for download links to point to backend server
 
-import React, { useState, useEffect } from 'react';
-import { fetchAssignments } from './api';
+import React, { useState, useEffect } from 'react';  
+import { fetchAssignments, submitAssignment, fetchSubmissions, BACKEND_URL } from './api';  // Updated: Import BACKEND_URL
 import Navbar from './Navbar';
 
-const StudentAssignments = () => {
-  const [assignments, setAssignments] = useState([]);
+const StudentAssignments = () => {  
+  const [assignments, setAssignments] = useState([]);  
+  const [submissions, setSubmissions] = useState([]);  // Student's own submissions  
+  const [files, setFiles] = useState({});  // Files per assignment ID for upload  
   const user = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
 
-  // Load assignments for student's current courses on mount
-  useEffect(() => {
-    const courses = user.currentCourses?.map(c => c.courseName) || [];
-    if (courses.length > 0) {
-      fetchAssignments({ courses: courses.join(',') })
-        .then(setAssignments)
-        .catch(console.error);
-    }
-  }, [user.currentCourses]);
+  // Load assignments and submissions on mount  
+  useEffect(() => {  
+    const courses = user.currentCourses?.map(c => c.courseName) || [];  
+    if (courses.length > 0) {  
+      fetchAssignments({ courses: courses.join(',') })  
+        .then(setAssignments)  
+        .catch(console.error);  
+      fetchSubmissions({ student: user._id })  // Fetch own submissions  
+        .then(setSubmissions)  
+        .catch(console.error);  
+    }  
+  }, [user.currentCourses, user._id]);
 
-  return (
-    <div>
-      <Navbar />
-      <h1>Assignments</h1>
-      <div className="horizontal-flex">
-        {assignments.map(a => (
-          <div key={a._id} className="card">
-            <h3>{a.course}</h3>
-            <p>{a.description}</p>
-            <p>Deadline: {new Date(a.deadline).toLocaleDateString()}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // Handle file change for a specific assignment  
+  const handleFileChange = (assignmentId, e) => {  
+    setFiles(prev => ({ ...prev, [assignmentId]: Array.from(e.target.files) }));  
+  };
+
+  // Handle submit for a specific assignment  
+  const handleSubmit = async (assignmentId) => {  
+    try {  
+      await submitAssignment(assignmentId, user._id, files[assignmentId] || []);  
+      // Refresh submissions after submit  
+      const updatedSubs = await fetchSubmissions({ student: user._id });  
+      setSubmissions(updatedSubs);  
+      setFiles(prev => ({ ...prev, [assignmentId]: [] }));  // Clear files  
+    } catch (err) {  
+      console.error('Submit error:', err);  
+    }  
+  };
+
+  return (  
+    <div>  
+      <Navbar />  
+      <h1>Assignments</h1>  
+      <div className="horizontal-flex">  
+        {assignments.map(a => {  
+          const mySubmission = submissions.find(s => s.assignment?._id === a._id);  // Find own submission  
+          return (  
+            <div key={a._id} className="card">  
+              <h3>{a.course}</h3>  
+              <p>{a.description}</p>  
+              <p>Deadline: {new Date(a.deadline).toLocaleDateString()}</p>  
+              {/* Display teacher uploaded files as download links */}  
+              {a.teacherFiles?.length > 0 && (  
+                <>  
+                  <h4>Materials:</h4>  
+                  <ul>  
+                    {a.teacherFiles.map((file, idx) => (  
+                      <li key={idx}>  
+                        <a href={`${BACKEND_URL}/uploads/${file}`} download>{file}</a>  {/* Fix: Use BACKEND_URL */}  
+                      </li>  
+                    ))}  
+                  </ul>  
+                </>  
+              )}  
+              {/* Submission section */}  
+              <h4>Your Submission:</h4>  
+              {mySubmission ? (  
+                <>  
+                  <p>Submitted on: {new Date(mySubmission.submittedAt).toLocaleString()}</p>  
+                  <ul>  
+                    {mySubmission.files.map((file, idx) => (  
+                      <li key={idx}>  
+                        <a href={`${BACKEND_URL}/uploads/${file}`} download>{file}</a>  {/* Fix: Use BACKEND_URL */}  
+                      </li>  
+                    ))}  
+                  </ul>  
+                  {/* Note: Resubmit not implemented in MVP; could add PUT route if needed */}  
+                </>  
+              ) : (  
+                <>  
+                  <input type="file" multiple onChange={(e) => handleFileChange(a._id, e)} />  
+                  <button onClick={() => handleSubmit(a._id)}>Submit</button>  
+                </>  
+              )}  
+            </div>  
+          );  
+        })}  
+      </div>  
+    </div>  
+  );  
 };
 
-export default StudentAssignments;
+export default StudentAssignments;  
