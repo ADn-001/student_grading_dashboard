@@ -73,16 +73,18 @@ const AdminDashboard = () => {
       let updatedData = { ...formData };
       if (role === 'teacher') updatedData.coursesTaught = selectedCourses;
       if (role === 'student') updatedData.currentCourses = selectedCourses.map(name => ({ courseName: name, grade: null }));
+      console.log('Sending user data:', updatedData); // DEBUG: Log what's being sent
       const savedUser = await createUser(updatedData);
       await syncCourses(savedUser); // Sync with courses
       // Reset forms and toggles
       if (role === 'admin') setAdminForm({ email: '', password: '', fullName: '', role: 'admin' });
       if (role === 'teacher') { setTeacherForm({ email: '', password: '', fullName: '', role: 'teacher' }); setTeacherCourses([]); setShowTeacherDropdown(false); }
       if (role === 'student') { setStudentForm({ email: '', password: '', fullName: '', role: 'student', major: '', batch: '', currentYear: 1, currentSemester: 'Semester 1' }); setStudentCourses([]); setShowStudentDropdown(false); }
+      setError(''); // Clear error on success
       await loadData(); // Refetch
     } catch (err) {
       console.error('Add error:', err);
-      setError('Failed to add user.');
+      setError(`Failed to add user: ${err.message}`);
     }
   };
 

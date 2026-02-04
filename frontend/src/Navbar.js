@@ -1,7 +1,7 @@
 // Navbar component: Shown on all authenticated pages
 // Links to Home (dashboard), Logout, Account and assignments
 // Simple, effective navigation with React Router
-// Changes: Converted Home and Account links into buttons for consistent UI, using navigate for routing
+// Updated: Logout now clears JWT token along with user data
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,9 +12,10 @@ const Navbar = () => {
   const user = storedUser ? JSON.parse(storedUser) : null;
   const role = user?.role;
 
-  // Handler for logout: Clears local storage and redirects to login page
+  // Handler for logout: Clears JWT token and user data, redirects to login page
   const handleLogout = () => {
-    localStorage.removeItem('loggedInUser');  // Clear user for MVP "logout"
+    localStorage.removeItem('loggedInUser');  // Clear user data
+    localStorage.removeItem('token');  // Clear JWT token
     navigate('/');  // Redirect to login
   };
 

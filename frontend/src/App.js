@@ -10,8 +10,14 @@ import Account from './Account';
 import Navbar from './Navbar'; 
 
 const ProtectedRoute = ({ children }) => {
+  // Check for both token and user data
+  const token = localStorage.getItem('token');
   const user = localStorage.getItem('loggedInUser');
-  if (!user) return <Navigate to="/" />;
+  
+  if (!token || !user) {
+    return <Navigate to="/" />;
+  }
+  
   return (
     <>
       <Navbar />

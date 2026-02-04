@@ -4,6 +4,7 @@
 // Uses Faker for realistic fake data
 // Ensures consistency between User and Course models (e.g., enrollments)
 // Updated: Increased students to 70 (added 20 more), and added grade seeding for student currentCourses (random grades A-F or null)
+// UPDATED: Passwords are automatically hashed via User model pre-save hook with bcrypt
 
 const mongoose = require('mongoose');
 const { faker } = require('@faker-js/faker');
@@ -14,7 +15,7 @@ const Batch = require('./models/Batch');
 const Assignment = require('./models/Assignment');
 
 // Hardcoded DB connection (as per MVP - use .env in production)
-const DB_URI = 'mongodb://localhost:27017/mvp_db';
+const DB_URI = 'mongodb://localhost:27017/uniportal';
 
 // Sample data constants
 const MAJORS = ['Computer Science', 'Business Administration'];
@@ -24,7 +25,7 @@ const COURSES = [
   'Marketing Principles', 'Database Systems', 'Web Development',
   'Statistics', 'Business Ethics', 'Algorithms'
 ];
-const DEFAULT_PASSWORD = 'password123'; // Plain text for MVP demo only
+const DEFAULT_PASSWORD = 'password123'; // Will be hashed automatically via pre-save hook
 const STUDENT_YEAR = 1;
 const STUDENT_SEMESTER = 'Semester 1';
 const BATCH_YEAR = 2029; // Graduation year (assuming 4-year program starting 2025)

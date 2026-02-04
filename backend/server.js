@@ -1,6 +1,7 @@
 // Main Express server for backend  
 // Connects to MongoDB, sets up routes, listens on port 5000
 
+require('dotenv').config(); // Load environment variables from .env
 const express = require('express');  
 const mongoose = require('mongoose');  
 const authRoutes = require('./routes/authRoutes');  
@@ -14,8 +15,7 @@ const multer = require('multer');  // Added for file uploads (used in routes)
 const app = express();  
 const PORT = 5000;
 
-// Serve uploaded files statically for downloads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Removed static file serving of /uploads - now using secure download routes
 
 app.use(cors({  
   origin: 'http://localhost:3000'  // Allow frontend origin  
@@ -24,7 +24,7 @@ app.use(cors({
 app.use(express.json());
 
 // Hardcoded MongoDB connection (local for demo - no .env)  
-mongoose.connect('mongodb://localhost:27017/mvp_db')  
+mongoose.connect('mongodb://localhost:27017/uniportal')  
   .then(() => console.log('Connected to MongoDB'))  
   .catch(err => console.error('MongoDB connection error:', err));
 

@@ -2,9 +2,10 @@
 // Updated: Display teacher file download links
 // New: Allow file uploads for submissions; display own submitted files as download links
 // Fix: Use BACKEND_URL for download links to point to backend server
+// Updated: Use fetchMySubmissions instead of fetchSubmissions
 
 import React, { useState, useEffect } from 'react';  
-import { fetchAssignments, submitAssignment, fetchSubmissions, BACKEND_URL } from './api';  // Updated: Import BACKEND_URL
+import { fetchAssignments, submitAssignment, fetchMySubmissions, downloadTeacherFile, downloadSubmissionFile } from './api';
 import Navbar from './Navbar';
 
 const StudentAssignments = () => {  
@@ -20,7 +21,7 @@ const StudentAssignments = () => {
       fetchAssignments({ courses: courses.join(',') })  
         .then(setAssignments)  
         .catch(console.error);  
-      fetchSubmissions({ student: user._id })  // Fetch own submissions  
+      fetchMySubmissions()  // Fetch own submissions (updated to use new endpoint)
         .then(setSubmissions)  
         .catch(console.error);  
     }  
@@ -34,9 +35,9 @@ const StudentAssignments = () => {
   // Handle submit for a specific assignment  
   const handleSubmit = async (assignmentId) => {  
     try {  
-      await submitAssignment(assignmentId, user._id, files[assignmentId] || []);  
+      await submitAssignment(assignmentId, files[assignmentId] || []);  // Updated: don't pass student ID (uses JWT)
       // Refresh submissions after submit  
-      const updatedSubs = await fetchSubmissions({ student: user._id });  
+      const updatedSubs = await fetchMySubmissions();  // Updated to use new endpoint
       setSubmissions(updatedSubs);  
       setFiles(prev => ({ ...prev, [assignmentId]: [] }));  // Clear files  
     } catch (err) {  
@@ -63,9 +64,28 @@ const StudentAssignments = () => {
                   <ul>  
                     {a.teacherFiles.map((file, idx) => (  
                       <li key={idx}>  
-                        <a href={`${BACKEND_URL}/uploads/${file}`} download>{file}</a>  {/* Fix: Use BACKEND_URL */}  
-                      </li>  
-                    ))}  
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const blob = await downloadTeacherFile(a._id, file);
+                              const url = window.URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = file;
+                              document.body.appendChild(link);
+                              link.click();
+                              link.remove();
+                              window.URL.revokeObjectURL(url);
+                            } catch (err) {
+                              alert('Download failed');
+                            }
+                          }}
+                        >
+                          {file}
+                        </button>
+                      </li>
+                    ))}
                   </ul>  
                 </>  
               )}  
@@ -77,9 +97,28 @@ const StudentAssignments = () => {
                   <ul>  
                     {mySubmission.files.map((file, idx) => (  
                       <li key={idx}>  
-                        <a href={`${BACKEND_URL}/uploads/${file}`} download>{file}</a>  {/* Fix: Use BACKEND_URL */}  
-                      </li>  
-                    ))}  
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const blob = await downloadSubmissionFile(a._id, mySubmission._id, file);
+                              const url = window.URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = file;
+                              document.body.appendChild(link);
+                              link.click();
+                              link.remove();
+                              window.URL.revokeObjectURL(url);
+                            } catch (err) {
+                              alert('Download failed');
+                            }
+                          }}
+                        >
+                          {file}
+                        </button>
+                      </li>
+                    ))}
                   </ul>  
                   {/* Note: Resubmit not implemented in MVP; could add PUT route if needed */}  
                 </>  

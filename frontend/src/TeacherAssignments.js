@@ -4,12 +4,12 @@
 // Fix: Use BACKEND_URL for download links to point to backend server
 
 import React, { useState, useEffect } from 'react';  
-import { fetchAssignments, createAssignment, deleteAssignment, fetchAssignmentSubmissions, BACKEND_URL } from './api';  // Updated: Import BACKEND_URL
+import { fetchAssignments, createAssignment, deleteAssignment, fetchAssignmentSubmissions, downloadTeacherFile, downloadSubmissionFile } from './api';
 import Navbar from './Navbar';
 
 const TeacherAssignments = () => {  
   const [assignments, setAssignments] = useState([]);  
-  const [form, setForm] = useState({ course: '', description: '', deadline: '' });  
+  const [form, setForm] = useState({ title: '', course: '', description: '', deadline: '', maxGrade: '' });  
   const [files, setFiles] = useState([]);  // Added: For teacher file uploads  
   const [selectedAssignment, setSelectedAssignment] = useState(null);  // For viewing submissions  
   const [submissions, setSubmissions] = useState([]);  // Student submissions for selected assignment  
@@ -38,7 +38,7 @@ const TeacherAssignments = () => {
     try {  
       const newAssignment = await createAssignment({ ...form, teacher: user._id }, files);  
       setAssignments([...assignments, newAssignment]);  
-      setForm({ course: '', description: '', deadline: '' });  
+      setForm({ title: '', course: '', description: '', deadline: '', maxGrade: '' });  
       setFiles([]);  // Clear files  
     } catch (err) {  
       console.error('Create assignment error:', err);  
@@ -78,6 +78,14 @@ const TeacherAssignments = () => {
       <Navbar />  
       <h1>Assignments</h1>  
       <form onSubmit={handleSubmit}>  
+        <input  
+          type="text"  
+          name="title"  
+          value={form.title}  
+          onChange={handleChange}  
+          placeholder="Title"  
+          required  
+        />  
         <select name="course" value={form.course} onChange={handleChange} required>  
           <option value="">Select Course</option>  
           {user.coursesTaught?.map(c => (  
@@ -86,6 +94,15 @@ const TeacherAssignments = () => {
         </select>  
         <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" required />  
         <input type="date" name="deadline" value={form.deadline} onChange={handleChange} required />  
+        <input  
+          type="number"  
+          name="maxGrade"  
+          value={form.maxGrade}  
+          onChange={handleChange}  
+          placeholder="Max Grade (e.g. 100)"  
+          min="1"  
+          required  
+        />  
         <input type="file" multiple onChange={handleFileChange} />  {/* Added: File upload input */}  
         <button type="submit">Create Assignment</button>  
       </form>  
@@ -103,9 +120,28 @@ const TeacherAssignments = () => {
                 <ul>  
                   {a.teacherFiles.map((file, idx) => (  
                     <li key={idx}>  
-                      <a href={`${BACKEND_URL}/uploads/${file}`} download>{file}</a>  {/* Fix: Use BACKEND_URL */}  
-                    </li>  
-                  ))}  
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const blob = await downloadTeacherFile(a._id, file);
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = file;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            window.URL.revokeObjectURL(url);
+                          } catch (err) {
+                            alert('Download failed');
+                          }
+                        }}
+                      >
+                        {file}
+                      </button>
+                    </li>
+                  ))}
                 </ul>  
               </>  
             )}  
@@ -123,9 +159,28 @@ const TeacherAssignments = () => {
                       <ul>  
                         {sub.files.map((file, idx) => (  
                           <li key={idx}>  
-                            <a href={`${BACKEND_URL}/uploads/${file}`} download>{file}</a>  {/* Fix: Use BACKEND_URL */}  
-                          </li>  
-                        ))}  
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  const blob = await downloadSubmissionFile(a._id, sub._id, file);
+                                  const url = window.URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = file;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  link.remove();
+                                  window.URL.revokeObjectURL(url);
+                                } catch (err) {
+                                  alert('Download failed');
+                                }
+                              }}
+                            >
+                              {file}
+                            </button>
+                          </li>
+                        ))}
                       </ul>  
                     </div>  
                   ))  

@@ -1,11 +1,21 @@
 // Course routes (CRUD and assignments)
+// Updated: JWT authentication required; admin-only CRUD operations
+// Updated: Input validation and sanitization applied
 
 const express = require('express');
 const Course = require('../models/Course');
+const { authenticateToken, requireRole } = require('../middleware/auth');
+const { sanitizeData } = require('../utils/validators');
 
 const router = express.Router();
 
-// GET /courses - Fetch all courses
+// Apply sanitization to all requests
+router.use(sanitizeData);
+
+// Apply authentication middleware to all routes in this router
+router.use(authenticateToken);
+
+// GET /courses - Fetch all courses (all authenticated users)
 router.get('/', async (req, res) => {
   try {
     const courses = await Course.find();
@@ -16,8 +26,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /courses - Add new course
-router.post('/', async (req, res) => {
+// POST /courses - Add new course (admin only)
+router.post('/', requireRole(['admin']), async (req, res) => {
   try {
     const newCourse = new Course(req.body);
     await newCourse.save();
@@ -28,8 +38,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /courses/:id - Update course (e.g., assign teacher/students)
-router.put('/:id', async (req, res) => {
+// PUT /courses/:id - Update course (admin only)
+router.put('/:id', requireRole(['admin']), async (req, res) => {
   try {
     const updatedCourse = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updatedCourse);
@@ -39,8 +49,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /courses/:id - Delete course
-router.delete('/:id', async (req, res) => {
+// DELETE /courses/:id - Delete course (admin only)
+router.delete('/:id', requireRole(['admin']), async (req, res) => {
   try {
     await Course.findByIdAndDelete(req.params.id);
     res.json({ message: 'Course deleted' });

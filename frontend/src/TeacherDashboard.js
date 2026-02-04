@@ -4,7 +4,7 @@
 // Updated: Changed grade handling from letters to numbers (0-100)
 
 import React, { useEffect, useState } from 'react';
-import { fetchCourses, fetchUsers, updateUser } from './api';
+import { fetchCourses, fetchUsersByEmails, updateUser } from './api';
 import Navbar from './Navbar';
 
 const TeacherDashboard = () => {
@@ -19,8 +19,19 @@ const TeacherDashboard = () => {
     setTeacherData(storedUser);
 
     const loadData = async () => {
-      setCourses(await fetchCourses());
-      setUsers(await fetchUsers());
+      const coursesData = await fetchCourses();
+      setCourses(coursesData);
+      // Get all unique student emails from courses taught by this teacher
+      const storedUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+      const taughtCourses = coursesData.filter(c => storedUser.coursesTaught?.includes(c.name));
+      const studentEmails = Array.from(new Set(
+        taughtCourses.flatMap(c => c.enrolledStudents)
+      ));
+      if (studentEmails.length > 0) {
+        setUsers(await fetchUsersByEmails(studentEmails));
+      } else {
+        setUsers([]);
+      }
     };
     loadData();
   }, []);

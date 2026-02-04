@@ -4,7 +4,7 @@
 // Changes: Replaced simple header with Navbar component
 
 import React, { useEffect, useState } from 'react';
-import { fetchCourses, fetchUsers } from './api';
+import { fetchCourses, fetchTeachers } from './api';
 import Navbar from './Navbar';
 
 const StudentDashboard = () => {
@@ -18,8 +18,8 @@ const StudentDashboard = () => {
 
     const loadData = async () => {
       setCourses(await fetchCourses());
-      const allUsers = await fetchUsers();
-      setTeachers(allUsers.filter(u => u.role === 'teacher'));
+      const allTeachers = await fetchTeachers();
+      setTeachers(allTeachers);
     };
     loadData();
   }, []);
