@@ -64,6 +64,8 @@ student_grading_dashboard/
 │   │   ├── Course.js
 │   │   ├── Major.js
 │   │   └── Batch.js
+│   ├── middleware/
+│   │   ├── auth.js
 │   ├── routes/
 │   │   ├── assignmentRoutes.js
 │   │   ├── authRoutes.js
