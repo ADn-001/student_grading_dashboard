@@ -53,7 +53,9 @@ student_grading_dashboard/
 ├── README.md
 └── .gitignore
 ```
-
+---
+### Figma link: 
+https://www.figma.com/design/xapBnQ65iniTLl0PO5Dmsc/Online-Coaching-Teacher-s-Admin-Panel--Community-?node-id=0-1&p=f&t=y5bwo9LAsxQEiGpQ-0
 ---
 
 ### Tech Stack & Tools
