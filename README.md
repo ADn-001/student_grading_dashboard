@@ -1,5 +1,7 @@
 # Student Grading Dashboard
 
+## please note: this is the interm presentation version of the project, for final, switch to the "final" branch.
+
 A simple, clean, and role-based **Student Grading Dashboard** built with the MERN stack.  
 This MVP allows Admins, Teachers, and Students to log in and perform their respective tasks with a modern dark-themed UI.
 
@@ -53,9 +55,6 @@ student_grading_dashboard/
 ├── README.md
 └── .gitignore
 ```
----
-### Figma link: 
-https://www.figma.com/design/xapBnQ65iniTLl0PO5Dmsc/Online-Coaching-Teacher-s-Admin-Panel--Community-?node-id=0-1&p=f&t=y5bwo9LAsxQEiGpQ-0
 ---
 
 ### Tech Stack & Tools
