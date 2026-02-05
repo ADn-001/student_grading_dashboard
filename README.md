@@ -1,5 +1,6 @@
 
 # Student Grading Dashboard (Final Project Version)
+**Project made by:** Adnan Mohammed Shelim
 ## please note: this is the project branch for final.
 A robust, secure, and role-based **Student Grading Dashboard** built with the MERN stack.
 
@@ -49,8 +50,6 @@ https://www.figma.com/design/xapBnQ65iniTLl0PO5Dmsc/Online-Coaching-Teacher-s-Ad
 - **Password Hashing & Salting**: User passwords are hashed and salted using bcrypt before storage; never stored in plaintext.
 - **File Validation**: All file uploads (assignments, submissions) are validated for type and size; only allowed extensions are accepted.
 - **Sensitive Data Protection**: Passwords are never returned in API responses; user data is filtered.
-
-**Project made by:** Adnan Mohammed Shelim
 
 ---
 
