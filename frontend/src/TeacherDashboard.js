@@ -1,7 +1,9 @@
-// Teacher dashboard: Horizontal course cards, clickable to show student table
-// Table: email, name, current grade (now numeric), new grade input (number)
-// Master Update button batches all changes
-// Updated: Changed grade handling from letters to numbers (0-100)
+
+// Teacher dashboard for managing courses and student grades
+// - Shows horizontal cards for each course taught by the teacher
+// - Clicking a course shows a table of enrolled students and grade inputs
+// - Allows batch updating of grades for all students in a course
+// - All actions require teacher role (enforced by backend)
 
 import React, { useEffect, useState } from 'react';
 import { fetchCourses, fetchUsersByEmails, updateUser } from './api';

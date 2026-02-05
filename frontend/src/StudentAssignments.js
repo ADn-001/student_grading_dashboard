@@ -1,8 +1,10 @@
-// Student assignments page: View assignments for enrolled courses as cards (read-only)
-// Updated: Display teacher file download links
-// New: Allow file uploads for submissions; display own submitted files as download links
-// Fix: Use BACKEND_URL for download links to point to backend server
-// Updated: Use fetchMySubmissions instead of fetchSubmissions
+
+// Student assignments page for viewing and submitting assignments
+// - Shows assignments for all enrolled courses as cards
+// - Allows file uploads for assignment submissions
+// - Displays teacher materials and student's own submitted files as download links
+// - All actions require student role (enforced by backend)
+// - File validation and secure download handled by backend
 
 import React, { useState, useEffect } from 'react';
 import { fetchAssignments, submitAssignment, fetchMySubmissions, downloadTeacherFile, downloadSubmissionFile } from './api';

@@ -1,6 +1,6 @@
-// Login component: Simple form to submit email/password
-// Updated: Stores JWT token and fetches user data after login
-// Changes: Added app name header, centered form, larger fields/buttons
+
+// Login component for authentication
+// Handles user login, stores JWT token, fetches user data, and redirects by role
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';

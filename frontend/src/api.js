@@ -1,3 +1,10 @@
+
+// API helper functions for frontend-backend communication
+// - Handles all fetch requests for users, courses, assignments, authentication, and file downloads
+// - Automatically attaches JWT token to protected requests
+// - Provides helpers for both JSON and FormData requests
+// - All endpoints are protected by backend role checks and validation
+
 // Fetch all teachers (for student dashboard)
 export const fetchTeachers = async () => {
   const response = await fetch(`${API_BASE}/users?role=teacher`, {

@@ -1,9 +1,10 @@
-// Admin dashboard: 3 separate tables for user types, dedicated add forms per role, search-based edit form
-// Updated for UI enhancements: Tables for admins/teachers/students, role-specific add forms (student includes major/batch/year/sem)
-// Course assignments for teacher/student adds/edits, with max limits
-// Syncs User and Course models on save; uses separate states for each add form
-// Clean structure: Handlers reused where possible, good comments for readability
-// Changes: Replaced simple header with Navbar component
+
+// Admin dashboard for managing users and courses
+// - Shows tables for admins, teachers, students
+// - Dedicated add forms for each role (admin, teacher, student)
+// - Edit/search user by email, update user info and course assignments
+// - Handles course assignment syncing, input validation, and error handling
+// - All actions require admin role (enforced by backend)
 
 import React, { useEffect, useState } from 'react';
 import { fetchUsers, fetchCourses, createUser, updateUser, deleteUser, updateCourse } from './api';

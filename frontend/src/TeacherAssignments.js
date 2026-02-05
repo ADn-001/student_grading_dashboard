@@ -1,7 +1,9 @@
-// Teacher assignments page: Create assignments with file uploads, view/delete, view student submissions
-// Updated: Added file upload during creation (teacher materials)
-// New: Display teacher file download links; button to view student submissions with download links
-// Fix: Use BACKEND_URL for download links to point to backend server
+
+// Teacher assignments page for managing assignments and student submissions
+// - Allows teachers to create assignments with file uploads (materials)
+// - View/delete assignments, view student submissions, and download files
+// - All actions require teacher role (enforced by backend)
+// - File validation and secure download handled by backend
 
 import React, { useState, useEffect } from 'react';
 import { fetchAssignments, createAssignment, deleteAssignment, fetchAssignmentSubmissions, downloadTeacherFile, downloadSubmissionFile } from './api';

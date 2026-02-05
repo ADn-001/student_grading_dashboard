@@ -1,5 +1,8 @@
-// Account page: Displays user info based on role, allows password change
-// Simple form for update, uses API to PUT own user
+
+// Account page for viewing user info and changing password
+// - Displays user info based on role (admin, teacher, student)
+// - Allows password change with validation and error handling
+// - All actions require authentication (enforced by backend)
 
 import React, { useState } from 'react';
 import { updateUser } from './api';
