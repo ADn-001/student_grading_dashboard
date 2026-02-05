@@ -1,6 +1,6 @@
 
 # Student Grading Dashboard (Final Project Version)
-
+## please note: this is the project branch for final.
 A robust, secure, and role-based **Student Grading Dashboard** built with the MERN stack.
 
 **This is the final project version, featuring a complete UI overhaul (modern light mode, card-based dashboard, responsive design) and comprehensive security improvements.**
@@ -36,6 +36,9 @@ Admins, Teachers, and Students can log in and perform their respective tasks wit
 - Role-based navigation and content
 - Accessible, clean, and consistent layout
 
+---
+### Figma link: 
+https://www.figma.com/design/xapBnQ65iniTLl0PO5Dmsc/Online-Coaching-Teacher-s-Admin-Panel--Community-?node-id=0-1&p=f&t=y5bwo9LAsxQEiGpQ-0
 ---
 
 ## Security & Validation (Final Version)
