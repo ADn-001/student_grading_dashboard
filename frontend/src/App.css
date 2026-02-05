@@ -1,117 +1,353 @@
-/* Global theme styles - simple variables for reuse */
-/* Main background: very dark grey (almost black) */
+/* ========================================================================== */
+/* Uni-Portal UI Overhaul – Light Mode (Figma-inspired)                       */
+/* Do NOT remove or override existing dark theme rules – just add new ones    */
+/* ========================================================================== */
+
 :root {
-  --bg-main: #111111;
-  --accent-dark-red: #721010;
-  --accent-hover-red: #a52a2a; /* Lighter red for hover */
-  --text-white: #ffffff;
-  --card-grey: #333333; /* Grey for cards */
-  --contrast-bg: #242323; /* For buttons on red */
+  --primary-blue: #2196F3;
+  --bg-white: #FFFFFF;
+  --sidebar-grey: #F5F5F5;
+  --text-dark: #333333;
+  --text-grey: #757575;
+  --status-pink: #FFEBEE;
+  --status-green: #E8F5E9;
+  --status-yellow: #FFFDE7;
+  --status-red: #FFEBEE;
+  --shadow: 0 2px 4px rgba(0,0,0,0.1);
+  --border-radius: 8px;
 }
 
-/* Apply to body and app */
 body, #root {
-  background-color: var(--bg-main);
-  color: var(--text-white);
-  font-family: Arial, sans-serif;
+  background: var(--bg-white);
+  color: var(--text-dark);
+  font-family: 'Roboto', Arial, sans-serif;
   margin: 0;
-  padding: 2rem; /* Increased padding for more space from borders */
 }
 
-/* Cards: grey background with slight radius */
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: var(--sidebar-grey);
+  position: fixed;
+  height: 100vh;
+  padding: 1rem;
+  border-right: 1px solid #e0e0e0;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--text-grey);
+  text-decoration: none;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: #e0e0e0;
+  color: var(--text-dark);
+}
+
+/* Header */
+.header {
+  background: var(--primary-blue);
+  color: white;
+  padding: 20px 40px 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-left: 260px;
+}
+
+.header .logo {
+  font-weight: bold;
+  font-size: 1.3rem;
+  margin-left: 24px;
+}
+
+/* Main content area */
+.main-content {
+  margin-left: 260px;
+  padding: 56px 56px 40px 56px;
+  /* Form styling for better visual appeal */
+  .card form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 8px;
+  }
+
+  .card form input,
+  .card form select,
+  .card form textarea {
+    padding: 12px 14px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    font-size: 1rem;
+    margin-bottom: 0;
+    background: #fafbfc;
+    color: var(--text-dark);
+    transition: border 0.2s;
+  }
+  .card form input:focus,
+  .card form select:focus,
+  .card form textarea:focus {
+    border: 1.5px solid var(--primary-blue);
+    outline: none;
+  }
+  .card form label {
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--text-grey);
+  }
+  .card form button {
+    margin-top: 8px;
+    align-self: flex-end;
+  }
+  min-height: 100vh;
+}
+/* Add extra spacing for page titles */
+h1, h2 {
+  margin-top: 32px;
+  margin-bottom: 24px;
+  margin-left: 24px;
+}
+
+/* Cards */
 .card {
-  background-color: var(--card-grey);
-  padding: 1.5rem; /* Slightly more padding for spacing */
-  border-radius: 8px; /* Slight border radius */
-  margin: 1.5rem 0; /* More margin for vertical spacing */
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
 }
 
-/* Buttons: dark red default, larger, shadow, hover effect */
-button {
-  background-color: var(--accent-dark-red);
-  color: var(--text-white);
+/* Status tags */
+.status-tag {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-ongoing   { background: var(--status-pink);   color: #d32f2f; }
+.status-starting  { background: var(--status-green);  color: #2e7d32; }
+.status-not-started { background: var(--status-yellow); color: #f57c00; }
+.status-completed { background: var(--status-green);  color: #2e7d32; }
+.status-missed    { background: var(--status-red);    color: #d32f2f; }
+
+/* Buttons */
+.button-primary {
+  background: var(--primary-blue);
+  color: white;
   border: none;
-  padding: 0.75rem 1.5rem; /* Larger padding */
-  border-radius: 6px; /* Slight border radius */
+  padding: 10px 20px;
+  border-radius: 6px;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-  transition: background-color 0.3s ease; /* Smooth hover transition */
+  font-weight: 500;
 }
 
-button:hover {
-  background-color: var(--accent-hover-red);
+.button-black {
+  background: #000;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
 }
 
-.card button {
-  background-color: var(--contrast-bg); /* Contrast for buttons on cards */
+/* Progress bar */
+.progress-bar {
+  background: #e0e0e0;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.card button:hover {
-  background-color: #444444; /* Hover for contrast buttons */
+.progress-fill {
+  background: var(--primary-blue);
+  height: 100%;
 }
 
-/* Tables: simple styling, dark red header row */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0; /* Spacing around tables */
+/* Responsive */
+@media (max-width: 992px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  .main-content {
+    margin-left: 0;
+  }
 }
 
-th {
-  background-color: var(--accent-dark-red); /* Dark red for top header row */
-  padding: 0.75rem;
-  text-align: left;
+/* Only keep new light mode and layout rules below */
+/* ==========================================================================
+   Uni-Portal UI Overhaul – Light Mode (Figma-inspired)
+   ========================================================================== */
+
+:root {
+  --primary-blue: #2196F3;
+  --bg-white: #FFFFFF;
+  --sidebar-grey: #F5F5F5;
+  --text-dark: #333333;
+  --text-grey: #757575;
+  --status-pink: #FFEBEE;
+  --status-green: #E8F5E9;
+  --status-yellow: #FFFDE7;
+  --status-red: #FFEBEE;
+  --shadow: 0 2px 4px rgba(0,0,0,0.1);
+  --border-radius: 8px;
 }
 
-td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid var(--text-white);
+body, #root {
+  background: var(--bg-white);
+  color: var(--text-dark);
+  font-family: 'Roboto', Arial, sans-serif;
+  margin: 0;
 }
 
-/* Forms: white text inputs, larger */
-input, select {
-  background-color: var(--contrast-bg);
-  color: var(--text-white);
-  border: 1px solid var(--accent-dark-red);
-  padding: 0.75rem; /* Larger padding */
-  margin: 0.75rem 0; /* More spacing */
-  font-size: 1.1rem; /* Slightly larger text */
-  width: 100%; /* Full width for better sizing */
-  box-sizing: border-box;
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  background: var(--sidebar-grey);
+  position: fixed;
+  height: 100vh;
+  padding: 1rem;
+  border-right: 1px solid #e0e0e0;
+  overflow-y: auto;
+  left: 0;
+  top: 0;
+  z-index: 101;
 }
 
-/* Flex for horizontal layouts */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--text-grey);
+  text-decoration: none;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: #e0e0e0;
+  color: var(--text-dark);
+}
+
+/* Header */
+.header {
+  background: var(--primary-blue);
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-left: 200px;
+}
+
+.header .logo {
+  font-weight: bold;
+  font-size: 1.3rem;
+}
+
+/* Main content area */
+.main-content {
+  margin-left: 200px;
+  padding: 32px 24px 24px 24px;
+  min-height: 100vh;
+}
+
+/* Cards */
+.card {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+/* Status tags */
+.status-tag {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-ongoing   { background: var(--status-pink);   color: #d32f2f; }
+.status-starting  { background: var(--status-green);  color: #2e7d32; }
+.status-not-started { background: var(--status-yellow); color: #f57c00; }
+.status-completed { background: var(--status-green);  color: #2e7d32; }
+.status-missed    { background: var(--status-red);    color: #d32f2f; }
+
+/* Buttons */
+.button-primary {
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.button-black {
+  background: #000;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+}
+
+/* Progress bar */
+.progress-bar {
+  background: #e0e0e0;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: var(--primary-blue);
+  height: 100%;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  .main-content {
+    margin-left: 0;
+  }
+  .header {
+    margin-left: 0;
+  }
+}
+
+/* Utility for horizontal flex layouts */
 .horizontal-flex {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem; /* Increased gap for more space */
-}
-
-/* Navbar styling: dark red background, full width with internal spacing */
-.navbar {
-  background-color: var(--accent-dark-red);
-  padding: 1rem 2rem; /* Spacing for contents within navbar */
-  margin: -2rem -2rem 2rem -2rem; /* Negative margins to span full width, positive bottom for spacing below */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Dropdown for course selection */
-.dropdown {
-  background-color: var(--card-grey);
-  padding: 1rem;
-  border: 1px solid var(--accent-dark-red);
-  border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: 0.5rem;
-}
-
-.dropdown label {
-  display: block;
-  margin-bottom: 0.5rem;
+  gap: 1.5rem;
 }
 
 /* Centered login form */

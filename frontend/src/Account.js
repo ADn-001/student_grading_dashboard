@@ -3,6 +3,8 @@
 
 import React, { useState } from 'react';
 import { updateUser } from './api';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 
 const Account = () => {
   const [user] = useState(JSON.parse(localStorage.getItem('loggedInUser') || '{}'));
@@ -21,29 +23,40 @@ const Account = () => {
   };
 
   return (
-    <div className="card">
-      <h1>Account Info</h1>
-      <p>Name: {user.fullName}</p>
-      <p>Email: {user.email}</p>
-      {user.role === 'student' && (
-        <>
-          <p>Major: {user.major}</p>
-          <p>Semester: {user.currentSemester}</p>
-          <p>Grad Date: {user.batch}</p>
-        </>
-      )}
-      {user.role === 'teacher' && (
-        <ul>
-          <h3>Courses Taught:</h3>
-          {user.coursesTaught?.map((course, idx) => <li key={idx}>{course}</li>)}
-        </ul>
-      )}
-      {/* Admin: just name/email - already shown */}
-      <h3>Change Password</h3>
-      <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" />
-      <button onClick={handleChangePassword}>Update Password</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-    </div>
+    <>
+      <Sidebar />
+      <Header user={user} />
+      <div className="main-content">
+        <div className="card" style={{ maxWidth: 500, margin: '0 auto' }}>
+          <h1 style={{ marginTop: 0 }}>Account Info</h1>
+          <div style={{ marginBottom: 18 }}>
+            <p><b>Name:</b> {user.fullName}</p>
+            <p><b>Email:</b> {user.email}</p>
+            {user.role === 'student' && (
+              <>
+                <p><b>Major:</b> {user.major}</p>
+                <p><b>Semester:</b> {user.currentSemester}</p>
+                <p><b>Grad Date:</b> {user.batch}</p>
+              </>
+            )}
+            {user.role === 'teacher' && (
+              <div>
+                <b>Courses Taught:</b>
+                <ul style={{ margin: '8px 0 0 18px' }}>
+                  {user.coursesTaught?.map((course, idx) => <li key={idx}>{course}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+          <h3 style={{ marginBottom: 8 }}>Change Password</h3>
+          <form onSubmit={e => { e.preventDefault(); handleChangePassword(); }} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" style={{ maxWidth: 300 }} />
+            <button className="button-primary" type="submit" style={{ maxWidth: 180 }}>Update Password</button>
+          </form>
+          {error && <p style={{ color: 'red', marginTop: 8 }}>{error}</p>}
+        </div>
+      </div>
+    </>
   );
 };
 

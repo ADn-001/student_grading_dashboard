@@ -5,7 +5,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { fetchCourses, fetchUsersByEmails, updateUser } from './api';
-import Navbar from './Navbar';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 
 const TeacherDashboard = () => {
   const [teacherData, setTeacherData] = useState(null);
@@ -78,66 +79,88 @@ const TeacherDashboard = () => {
     }
   };
 
+  // Get logged in user for header
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+
   return (
-    <div>
-      {/* <Navbar /> */}
-      <h1>Teacher Dashboard</h1>
-      <div className="horizontal-flex">
-        {taughtCourses.map(course => (
-          <div
-            key={course._id}
-            className="card"
-            style={{ cursor: 'pointer', width: '200px' }}
-            onClick={() => setSelectedCourse(selectedCourse === course.name ? null : course.name)}
-          >
-            <h3>{course.name}</h3>
-            <p>Enrolled: {course.enrolledStudents.length}</p>
-          </div>
-        ))}
-      </div>
-
-      {selectedCourse && (
-        <div className="card">
-          <h2>Students in {selectedCourse}</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Current Grade</th>
-                <th>New Grade (0-100)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {courses.find(c => c.name === selectedCourse)?.enrolledStudents.map(email => {
-                const student = users.find(u => u.email === email);
-                const currentGradeObj = student?.currentCourses.find(c => c.courseName === selectedCourse);
-                const currentGrade = currentGradeObj?.grade ?? 'Pending';
-
-                return (
-                  <tr key={email}>
-                    <td>{email}</td>
-                    <td>{student?.fullName}</td>
-                    <td>{currentGrade === 'Pending' ? 'Pending' : currentGrade}</td>
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        placeholder="New Grade"
-                        onChange={(e) => handleGradeChange(selectedCourse, email, e.target.value)}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <button onClick={handleUpdateAll}>Update All Grades</button>
+    <>
+      <Sidebar />
+      <Header user={loggedInUser} />
+      <div className="main-content">
+        <h1 style={{ textAlign: 'right', marginRight: 0 }}>Teacher Dashboard</h1>
+        <div className="horizontal-flex">
+          {taughtCourses.map(course => (
+            <div
+              key={course._id}
+              className="card"
+              style={{ cursor: 'pointer', width: '200px' }}
+              onClick={() => setSelectedCourse(selectedCourse === course.name ? null : course.name)}
+            >
+              <h3>{course.name}</h3>
+              <p>Enrolled: {course.enrolledStudents.length}</p>
+            </div>
+          ))}
         </div>
-      )}
-    </div>
+
+        {selectedCourse && (
+          <div className="card" style={{ maxWidth: 800, margin: '32px auto 0 auto', boxShadow: '0 4px 16px rgba(33,150,243,0.07)' }}>
+            <h2 style={{ marginTop: 0, marginBottom: 24 }}>Students in {selectedCourse}</h2>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                <thead>
+                  <tr style={{ background: 'var(--sidebar-grey)' }}>
+                    <th style={{ padding: '12px 10px', textAlign: 'left', color: 'var(--text-grey)', fontWeight: 600, fontSize: '1rem', borderTopLeftRadius: 8 }}>Email</th>
+                    <th style={{ padding: '12px 10px', textAlign: 'left', color: 'var(--text-grey)', fontWeight: 600, fontSize: '1rem' }}>Name</th>
+                    <th style={{ padding: '12px 10px', textAlign: 'left', color: 'var(--text-grey)', fontWeight: 600, fontSize: '1rem' }}>Current Grade</th>
+                    <th style={{ padding: '12px 10px', textAlign: 'left', color: 'var(--text-grey)', fontWeight: 600, fontSize: '1rem', borderTopRightRadius: 8 }}>New Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {courses.find(c => c.name === selectedCourse)?.enrolledStudents.map(email => {
+                    const student = users.find(u => u.email === email);
+                    const currentGradeObj = student?.currentCourses.find(c => c.courseName === selectedCourse);
+                    const currentGrade = currentGradeObj?.grade ?? 'Pending';
+                    return (
+                      <tr key={email} style={{ background: '#fafbfc', borderBottom: '1px solid #e0e0e0', transition: 'background 0.2s' }}>
+                        <td style={{ padding: '12px 10px', fontSize: '1rem', color: '#333' }}>{email}</td>
+                        <td style={{ padding: '12px 10px', fontWeight: 500 }}>{student?.fullName}</td>
+                        <td style={{ padding: '12px 10px', color: currentGrade === 'Pending' ? '#f57c00' : '#2196F3', fontWeight: 500 }}>
+                          {currentGrade === 'Pending' ? <span className="status-tag status-not-started">Pending</span> : <span className="status-tag status-completed">{currentGrade}</span>}
+                        </td>
+                        <td style={{ padding: '12px 10px' }}>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            placeholder="New Grade"
+                            style={{
+                              width: 100,
+                              padding: '8px 10px',
+                              borderRadius: 6,
+                              border: '1.5px solid #e0e0e0',
+                              fontSize: '1rem',
+                              background: '#fff',
+                              transition: 'border 0.2s',
+                              outline: 'none',
+                            }}
+                            onFocus={e => (e.target.style.border = '1.5px solid #2196F3')}
+                            onBlur={e => (e.target.style.border = '1.5px solid #e0e0e0')}
+                            onChange={(e) => handleGradeChange(selectedCourse, email, e.target.value)}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <button className="button-primary" style={{ marginTop: 24, float: 'right', minWidth: 180 }} onClick={handleUpdateAll}>Update All Grades</button>
+            <div style={{ clear: 'both' }} />
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

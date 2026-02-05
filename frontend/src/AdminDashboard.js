@@ -7,7 +7,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { fetchUsers, fetchCourses, createUser, updateUser, deleteUser, updateCourse } from './api';
-import Navbar from './Navbar';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -157,156 +158,224 @@ const AdminDashboard = () => {
   const teachers = users.filter(u => u.role === 'teacher');
   const students = users.filter(u => u.role === 'student');
 
+  // Get logged in user for header
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+
   return (
-    <div>
-      <h1>Admin Dashboard</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <>
+      <Sidebar />
+      <Header user={loggedInUser} />
+      <div className="main-content">
+        <h1 style={{ textAlign: 'right', marginRight: 0 }}>Admin Dashboard</h1>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {/* Admins Table */}
-      <h2>Admins</h2>
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Actions</th></tr></thead>
-        <tbody>
+        {/* Admins Cards */}
+        <h2>Admins</h2>
+        <div className="horizontal-flex">
           {admins.map(u => (
-            <tr key={u._id}>
-              <td>{u.fullName}</td><td>{u.email}</td>
-              <td><button onClick={() => handleDelete(u._id)}>Delete</button></td>
-            </tr>
+            <div className="card" key={u._id}>
+              <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{u.fullName}</div>
+              <div style={{ color: 'var(--text-grey)' }}>{u.email}</div>
+              <button className="button-black" onClick={() => handleDelete(u._id)} style={{ marginTop: 12 }}>Delete</button>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
 
-      {/* Teachers Table */}
-      <h2>Teachers</h2>
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Courses</th><th>Actions</th></tr></thead>
-        <tbody>
-          {teachers.map(u => (
-            <tr key={u._id}>
-              <td>{u.fullName}</td><td>{u.email}</td><td>{u.coursesTaught?.join(', ') || 'None'}</td>
-              <td><button onClick={() => handleDelete(u._id)}>Delete</button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {/* Teachers Table (in card) */}
+        <h2>Teachers</h2>
+        <div className="card">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: 'var(--sidebar-grey)' }}>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Name</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Email</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Courses</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teachers.map(u => (
+                <tr key={u._id} style={{ borderBottom: '1px solid #e0e0e0' }}>
+                  <td style={{ padding: '10px' }}>{u.fullName}</td>
+                  <td style={{ padding: '10px', color: 'var(--text-grey)' }}>{u.email}</td>
+                  <td style={{ padding: '10px' }}>{u.coursesTaught?.join(', ') || 'None'}</td>
+                  <td style={{ padding: '10px' }}><button className="button-black" onClick={() => handleDelete(u._id)}>Delete</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Students Table */}
-      <h2>Students</h2>
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Major</th><th>Batch</th><th>Courses</th><th>Actions</th></tr></thead>
-        <tbody>
-          {students.map(u => (
-            <tr key={u._id}>
-              <td>{u.fullName}</td><td>{u.email}</td><td>{u.major}</td><td>{u.batch}</td>
-              <td>{u.currentCourses?.map(c => c.courseName).join(', ') || 'None'}</td>
-              <td><button onClick={() => handleDelete(u._id)}>Delete</button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {/* Students Table (in card) */}
+        <h2>Students</h2>
+        <div className="card">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: 'var(--sidebar-grey)' }}>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Name</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Email</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Major</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Batch</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Courses</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map(u => (
+                <tr key={u._id} style={{ borderBottom: '1px solid #e0e0e0' }}>
+                  <td style={{ padding: '10px' }}>{u.fullName}</td>
+                  <td style={{ padding: '10px', color: 'var(--text-grey)' }}>{u.email}</td>
+                  <td style={{ padding: '10px' }}>{u.major}</td>
+                  <td style={{ padding: '10px' }}>{u.batch}</td>
+                  <td style={{ padding: '10px' }}>{u.currentCourses?.map(c => c.courseName).join(', ') || 'None'}</td>
+                  <td style={{ padding: '10px' }}><button className="button-black" onClick={() => handleDelete(u._id)}>Delete</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Add Admin Form */}
-      <h2>Add Admin</h2>
-      <form onSubmit={(e) => { e.preventDefault(); handleAdd(adminForm, [], 'admin'); }}>
-        <input name="fullName" value={adminForm.fullName} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Full Name" required />
-        <input name="email" value={adminForm.email} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Email" required />
-        <input name="password" type="password" value={adminForm.password} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Password" required />
-        <button type="submit">Add Admin</button>
-      </form>
+        {/* Add Admin Form */}
+        <div className="card" style={{ marginTop: 32 }}>
+          <h2>Add Admin</h2>
+          <form onSubmit={(e) => { e.preventDefault(); handleAdd(adminForm, [], 'admin'); }}>
+            <label htmlFor="admin-fullName">Full Name</label>
+            <input id="admin-fullName" name="fullName" value={adminForm.fullName} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Enter full name" required />
+            <label htmlFor="admin-email">Email</label>
+            <input id="admin-email" name="email" value={adminForm.email} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Enter email address" required />
+            <label htmlFor="admin-password">Password</label>
+            <input id="admin-password" name="password" type="password" value={adminForm.password} onChange={(e) => handleInputChange(e, setAdminForm)} placeholder="Enter password" required />
+            <button className="button-primary" type="submit">Add Admin</button>
+          </form>
+        </div>
 
-      {/* Add Teacher Form */}
-      <h2>Add Teacher</h2>
-      <form onSubmit={(e) => { e.preventDefault(); handleAdd(teacherForm, teacherCourses, 'teacher'); }}>
-        <input name="fullName" value={teacherForm.fullName} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Full Name" required />
-        <input name="email" value={teacherForm.email} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Email" required />
-        <input name="password" type="password" value={teacherForm.password} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Password" required />
-        <button type="button" onClick={() => setShowTeacherDropdown(!showTeacherDropdown)}>Assign Courses</button>
-        {showTeacherDropdown && (
-          <div className="dropdown">
-            {courses.map(c => (
-              <label key={c._id}>
-                <input
-                  type="checkbox"
-                  checked={teacherCourses.includes(c.name)}
-                  onChange={() => handleCourseCheckbox(c.name, 'teacher', teacherCourses, setTeacherCourses)}
-                />
-                {c.name}
-              </label>
-            ))}
-          </div>
-        )}
-        <button type="submit">Add Teacher</button>
-      </form>
+        {/* Add Teacher Form */}
+        <div className="card" style={{ marginTop: 32 }}>
+          <h2>Add Teacher</h2>
+          <form onSubmit={(e) => { e.preventDefault(); handleAdd(teacherForm, teacherCourses, 'teacher'); }}>
+            <label htmlFor="teacher-fullName">Full Name</label>
+            <input id="teacher-fullName" name="fullName" value={teacherForm.fullName} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Enter full name" required />
+            <label htmlFor="teacher-email">Email</label>
+            <input id="teacher-email" name="email" value={teacherForm.email} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Enter email address" required />
+            <label htmlFor="teacher-password">Password</label>
+            <input id="teacher-password" name="password" type="password" value={teacherForm.password} onChange={(e) => handleInputChange(e, setTeacherForm)} placeholder="Enter password" required />
+            <label>Assign Courses</label>
+            <button className="button-black" type="button" onClick={() => setShowTeacherDropdown(!showTeacherDropdown)}>
+              {showTeacherDropdown ? 'Hide Courses' : 'Select Courses'}
+            </button>
+            {showTeacherDropdown && (
+              <div className="dropdown">
+                {courses.map(c => (
+                  <label key={c._id} style={{ display: 'block', marginBottom: 4 }}>
+                    <input
+                      type="checkbox"
+                      checked={teacherCourses.includes(c.name)}
+                      onChange={() => handleCourseCheckbox(c.name, 'teacher', teacherCourses, setTeacherCourses)}
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            )}
+            <button className="button-primary" type="submit">Add Teacher</button>
+          </form>
+        </div>
 
-      {/* Add Student Form */}
-      <h2>Add Student</h2>
-      <form onSubmit={(e) => { e.preventDefault(); handleAdd(studentForm, studentCourses, 'student'); }}>
-        <input name="fullName" value={studentForm.fullName} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Full Name" required />
-        <input name="email" value={studentForm.email} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Email" required />
-        <input name="password" type="password" value={studentForm.password} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Password" required />
-        <input name="major" value={studentForm.major} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Major" required />
-        <input name="batch" value={studentForm.batch} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Batch (e.g., 2025)" required />
-        <input name="currentYear" type="number" value={studentForm.currentYear} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Year" required />
-        <input name="currentSemester" value={studentForm.currentSemester} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Semester" required />
-        <button type="button" onClick={() => setShowStudentDropdown(!showStudentDropdown)}>Assign Courses</button>
-        {showStudentDropdown && (
-          <div className="dropdown">
-            {courses.map(c => (
-              <label key={c._id}>
-                <input
-                  type="checkbox"
-                  checked={studentCourses.includes(c.name)}
-                  onChange={() => handleCourseCheckbox(c.name, 'student', studentCourses, setStudentCourses)}
-                />
-                {c.name}
-              </label>
-            ))}
-          </div>
-        )}
-        <button type="submit">Add Student</button>
-      </form>
+        {/* Add Student Form */}
+        <div className="card" style={{ marginTop: 32 }}>
+          <h2>Add Student</h2>
+          <form onSubmit={(e) => { e.preventDefault(); handleAdd(studentForm, studentCourses, 'student'); }}>
+            <label htmlFor="student-fullName">Full Name</label>
+            <input id="student-fullName" name="fullName" value={studentForm.fullName} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Enter full name" required />
+            <label htmlFor="student-email">Email</label>
+            <input id="student-email" name="email" value={studentForm.email} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Enter email address" required />
+            <label htmlFor="student-password">Password</label>
+            <input id="student-password" name="password" type="password" value={studentForm.password} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Enter password" required />
+            <label htmlFor="student-major">Major</label>
+            <input id="student-major" name="major" value={studentForm.major} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Major (e.g. Computer Science)" required />
+            <label htmlFor="student-batch">Batch</label>
+            <input id="student-batch" name="batch" value={studentForm.batch} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Batch (e.g., 2025)" required />
+            <label htmlFor="student-currentYear">Current Year</label>
+            <input id="student-currentYear" name="currentYear" type="number" value={studentForm.currentYear} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Year" required />
+            <label htmlFor="student-currentSemester">Current Semester</label>
+            <input id="student-currentSemester" name="currentSemester" value={studentForm.currentSemester} onChange={(e) => handleInputChange(e, setStudentForm)} placeholder="Current Semester" required />
+            <label>Assign Courses</label>
+            <button className="button-black" type="button" onClick={() => setShowStudentDropdown(!showStudentDropdown)}>
+              {showStudentDropdown ? 'Hide Courses' : 'Select Courses'}
+            </button>
+            {showStudentDropdown && (
+              <div className="dropdown">
+                {courses.map(c => (
+                  <label key={c._id} style={{ display: 'block', marginBottom: 4 }}>
+                    <input
+                      type="checkbox"
+                      checked={studentCourses.includes(c.name)}
+                      onChange={() => handleCourseCheckbox(c.name, 'student', studentCourses, setStudentCourses)}
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            )}
+            <button className="button-primary" type="submit">Add Student</button>
+          </form>
+        </div>
 
-      {/* Edit User Form */}
-      <h2>Edit User (Search by Email)</h2>
-      <input value={searchEmail} onChange={(e) => setSearchEmail(e.target.value)} placeholder="Email" />
-      <button onClick={handleSearch}>Search</button>
-      {editingUser && (
-        <form onSubmit={handleEditSubmit}>
-          <input name="fullName" value={editingUser.fullName} onChange={(e) => setEditingUser(prev => ({ ...prev, fullName: e.target.value }))} placeholder="Full Name" required />
-          <input name="email" value={editingUser.email} onChange={(e) => setEditingUser(prev => ({ ...prev, email: e.target.value }))} placeholder="Email" required />
-          <input name="password" type="password" value={editingUser.password} onChange={(e) => setEditingUser(prev => ({ ...prev, password: e.target.value }))} placeholder="Password" required />
-          {editingUser.role === 'student' && (
-            <>
-              <input name="major" value={editingUser.major || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, major: e.target.value }))} placeholder="Major" />
-              <input name="batch" value={editingUser.batch || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, batch: e.target.value }))} placeholder="Batch" />
-              <input name="currentYear" type="number" value={editingUser.currentYear || 1} onChange={(e) => setEditingUser(prev => ({ ...prev, currentYear: parseInt(e.target.value) }))} placeholder="Current Year" />
-              <input name="currentSemester" value={editingUser.currentSemester || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, currentSemester: e.target.value }))} placeholder="Current Semester" />
-            </>
-          )}
-          {(editingUser.role === 'teacher' || editingUser.role === 'student') && (
-            <>
-              <button type="button" onClick={() => setShowEditDropdown(!showEditDropdown)}>Assign Courses</button>
-              {showEditDropdown && (
-                <div className="dropdown">
-                  {courses.map(c => (
-                    <label key={c._id}>
-                      <input
-                        type="checkbox"
-                        checked={selectedCourses.includes(c.name)}
-                        onChange={() => handleCourseCheckbox(c.name, editingUser.role, selectedCourses, setSelectedCourses)}
-                      />
-                      {c.name}
-                    </label>
-                  ))}
-                </div>
+        {/* Edit User Form */}
+        <div className="card" style={{ marginTop: 32 }}>
+          <h2>Edit User (Search by Email)</h2>
+          <label htmlFor="edit-email">User Email</label>
+          <input id="edit-email" value={searchEmail} onChange={(e) => setSearchEmail(e.target.value)} placeholder="Enter user email to search" />
+          <button className="button-black" onClick={handleSearch}>Search</button>
+          {editingUser && (
+            <form onSubmit={handleEditSubmit}>
+              <label htmlFor="edit-fullName">Full Name</label>
+              <input id="edit-fullName" name="fullName" value={editingUser.fullName} onChange={(e) => setEditingUser(prev => ({ ...prev, fullName: e.target.value }))} placeholder="Full Name" required />
+              <label htmlFor="edit-email-field">Email</label>
+              <input id="edit-email-field" name="email" value={editingUser.email} onChange={(e) => setEditingUser(prev => ({ ...prev, email: e.target.value }))} placeholder="Email" required />
+              <label htmlFor="edit-password">Password</label>
+              <input id="edit-password" name="password" type="password" value={editingUser.password} onChange={(e) => setEditingUser(prev => ({ ...prev, password: e.target.value }))} placeholder="Password" required />
+              {editingUser.role === 'student' && (
+                <>
+                  <label htmlFor="edit-major">Major</label>
+                  <input id="edit-major" name="major" value={editingUser.major || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, major: e.target.value }))} placeholder="Major" />
+                  <label htmlFor="edit-batch">Batch</label>
+                  <input id="edit-batch" name="batch" value={editingUser.batch || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, batch: e.target.value }))} placeholder="Batch" />
+                  <label htmlFor="edit-currentYear">Current Year</label>
+                  <input id="edit-currentYear" name="currentYear" type="number" value={editingUser.currentYear || 1} onChange={(e) => setEditingUser(prev => ({ ...prev, currentYear: parseInt(e.target.value) }))} placeholder="Current Year" />
+                  <label htmlFor="edit-currentSemester">Current Semester</label>
+                  <input id="edit-currentSemester" name="currentSemester" value={editingUser.currentSemester || ''} onChange={(e) => setEditingUser(prev => ({ ...prev, currentSemester: e.target.value }))} placeholder="Current Semester" />
+                </>
               )}
-            </>
+              {(editingUser.role === 'teacher' || editingUser.role === 'student') && (
+                <>
+                  <label>Assign Courses</label>
+                  <button className="button-black" type="button" onClick={() => setShowEditDropdown(!showEditDropdown)}>
+                    {showEditDropdown ? 'Hide Courses' : 'Select Courses'}
+                  </button>
+                  {showEditDropdown && (
+                    <div className="dropdown">
+                      {courses.map(c => (
+                        <label key={c._id} style={{ display: 'block', marginBottom: 4 }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedCourses.includes(c.name)}
+                            onChange={() => handleCourseCheckbox(c.name, editingUser.role, selectedCourses, setSelectedCourses)}
+                          />
+                          {c.name}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+              <button className="button-primary" type="submit">Save Edit</button>
+              <button className="button-black" type="button" onClick={() => setEditingUser(null)}>Cancel</button>
+            </form>
           )}
-          <button type="submit">Save Edit</button>
-          <button type="button" onClick={() => setEditingUser(null)}>Cancel</button>
-        </form>
-      )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 };
 

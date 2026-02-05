@@ -4,9 +4,10 @@
 // Fix: Use BACKEND_URL for download links to point to backend server
 // Updated: Use fetchMySubmissions instead of fetchSubmissions
 
-import React, { useState, useEffect } from 'react';  
+import React, { useState, useEffect } from 'react';
 import { fetchAssignments, submitAssignment, fetchMySubmissions, downloadTeacherFile, downloadSubmissionFile } from './api';
-import Navbar from './Navbar';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 
 const StudentAssignments = () => {  
   const [assignments, setAssignments] = useState([]);  
@@ -45,95 +46,100 @@ const StudentAssignments = () => {
     }  
   };
 
-  return (  
-    <div>  
-      <Navbar />  
-      <h1>Assignments</h1>  
-      <div className="horizontal-flex">  
-        {assignments.map(a => {  
-          const mySubmission = submissions.find(s => s.assignment?._id === a._id);  // Find own submission  
-          return (  
-            <div key={a._id} className="card">  
-              <h3>{a.course}</h3>  
-              <p>{a.description}</p>  
-              <p>Deadline: {new Date(a.deadline).toLocaleDateString()}</p>  
-              {/* Display teacher uploaded files as download links */}  
-              {a.teacherFiles?.length > 0 && (  
-                <>  
-                  <h4>Materials:</h4>  
-                  <ul>  
-                    {a.teacherFiles.map((file, idx) => (  
-                      <li key={idx}>  
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const blob = await downloadTeacherFile(a._id, file);
-                              const url = window.URL.createObjectURL(blob);
-                              const link = document.createElement('a');
-                              link.href = url;
-                              link.download = file;
-                              document.body.appendChild(link);
-                              link.click();
-                              link.remove();
-                              window.URL.revokeObjectURL(url);
-                            } catch (err) {
-                              alert('Download failed');
-                            }
-                          }}
-                        >
-                          {file}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>  
-                </>  
-              )}  
-              {/* Submission section */}  
-              <h4>Your Submission:</h4>  
-              {mySubmission ? (  
-                <>  
-                  <p>Submitted on: {new Date(mySubmission.submittedAt).toLocaleString()}</p>  
-                  <ul>  
-                    {mySubmission.files.map((file, idx) => (  
-                      <li key={idx}>  
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const blob = await downloadSubmissionFile(a._id, mySubmission._id, file);
-                              const url = window.URL.createObjectURL(blob);
-                              const link = document.createElement('a');
-                              link.href = url;
-                              link.download = file;
-                              document.body.appendChild(link);
-                              link.click();
-                              link.remove();
-                              window.URL.revokeObjectURL(url);
-                            } catch (err) {
-                              alert('Download failed');
-                            }
-                          }}
-                        >
-                          {file}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>  
-                  {/* Note: Resubmit not implemented in MVP; could add PUT route if needed */}  
-                </>  
-              ) : (  
-                <>  
-                  <input type="file" multiple onChange={(e) => handleFileChange(a._id, e)} />  
-                  <button onClick={() => handleSubmit(a._id)}>Submit</button>  
-                </>  
-              )}  
-            </div>  
-          );  
-        })}  
-      </div>  
-    </div>  
-  );  
+  return (
+    <>
+      <Sidebar />
+      <Header user={user} />
+      <div className="main-content">
+        <h1>Assignments</h1>
+        <div className="horizontal-flex">
+          {assignments.map(a => {
+            const mySubmission = submissions.find(s => s.assignment?._id === a._id);
+            return (
+              <div key={a._id} className="card" style={{ minWidth: 320, maxWidth: 400 }}>
+                <h3 style={{ marginTop: 0 }}>{a.course}</h3>
+                <p style={{ color: 'var(--text-grey)', fontWeight: 500 }}>{a.title}</p>
+                <p>{a.description}</p>
+                <p style={{ fontSize: '0.95rem', color: '#888' }}>Deadline: {new Date(a.deadline).toLocaleDateString()}</p>
+                {a.teacherFiles?.length > 0 && (
+                  <>
+                    <h4 style={{ marginBottom: 4 }}>Materials:</h4>
+                    <ul style={{ paddingLeft: 18 }}>
+                      {a.teacherFiles.map((file, idx) => (
+                        <li key={idx} style={{ marginBottom: 2 }}>
+                          <button
+                            className="button-black"
+                            style={{ padding: '4px 10px', fontSize: '0.95rem' }}
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const blob = await downloadTeacherFile(a._id, file);
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = file;
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                window.URL.revokeObjectURL(url);
+                              } catch (err) {
+                                alert('Download failed');
+                              }
+                            }}
+                          >
+                            {file}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <h4 style={{ marginBottom: 4 }}>Your Submission:</h4>
+                {mySubmission ? (
+                  <>
+                    <p style={{ fontSize: '0.95rem', color: '#888' }}>Submitted on: {new Date(mySubmission.submittedAt).toLocaleString()}</p>
+                    <ul style={{ paddingLeft: 18 }}>
+                      {mySubmission.files.map((file, idx) => (
+                        <li key={idx} style={{ marginBottom: 2 }}>
+                          <button
+                            className="button-black"
+                            style={{ padding: '4px 10px', fontSize: '0.95rem' }}
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const blob = await downloadSubmissionFile(a._id, mySubmission._id, file);
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = file;
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                window.URL.revokeObjectURL(url);
+                              } catch (err) {
+                                alert('Download failed');
+                              }
+                            }}
+                          >
+                            {file}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <>
+                    <input type="file" multiple onChange={(e) => handleFileChange(a._id, e)} />
+                    <button className="button-primary" style={{ marginTop: 8 }} onClick={() => handleSubmit(a._id)}>Submit</button>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default StudentAssignments;  

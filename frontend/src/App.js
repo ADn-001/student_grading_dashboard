@@ -7,23 +7,15 @@ import StudentDashboard from './StudentDashboard';
 import TeacherAssignments from './TeacherAssignments';
 import StudentAssignments from './StudentAssignments';
 import Account from './Account';
-import Navbar from './Navbar'; 
 
 const ProtectedRoute = ({ children }) => {
   // Check for both token and user data
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('loggedInUser');
-  
   if (!token || !user) {
     return <Navigate to="/" />;
   }
-  
-  return (
-    <>
-      <Navbar />
-      {children}
-    </>
-  );
+  return children;
 };
 
 const App = () => (
