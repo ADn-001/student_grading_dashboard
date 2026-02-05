@@ -27,7 +27,7 @@ Admins, Teachers, and Students can log in and perform their respective tasks wit
 
 ---
 
-## UI Overhaul (2026)
+## UI Overhaul
 
 - Modern light-mode, card-based dashboard (Figma-inspired)
 - Sidebar and header navigation for all roles
